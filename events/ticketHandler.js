@@ -83,7 +83,7 @@ async function monitorConfigChanges(client) {
                             .setAuthor({
                                 name: "Welcome to Ticket Support",
                                 iconURL: ticketIcons.mainIcon,
-                                url: "https://discord.gg/xQF9f9yUEM"
+                                url: "https://dsc.gg/nextech"
                             })
                             .setDescription(
                                 '- Please click below menu to create a new ticket.\n\n' +
@@ -146,7 +146,7 @@ async function handleSelectMenu(interaction, client) {
         const ticketExists = await ticketsCollection.findOne({ guildId, userId });
         if (ticketExists) {
             return interaction.followUp({
-                content: 'You already have an open ticket.',
+                content: 'Você já tem um ticket aberto!!! >:V',
                 flags: 64
             });
         }
@@ -185,7 +185,7 @@ async function handleSelectMenu(interaction, client) {
     } catch (error) {
         console.error("Error creating ticket channel:", error);
         return interaction.followUp({
-            content: "Failed to create ticket channel due to missing permissions or other errors.",
+            content: "Não conseguir criar o ticket, contate um administrador :(",
             flags: 64
         });
     }
@@ -201,18 +201,18 @@ async function handleSelectMenu(interaction, client) {
         .setAuthor({
             name: "Support Ticket",
             iconURL: ticketIcons.modIcon,
-            url: "https://discord.gg/xQF9f9yUEM"
+            url: "https://dsc.gg/nextech"
         })
         .setDescription(
-            `Hello ${user}, welcome to our support!\n- Please provide a detailed description of your issue\n- Our support team will assist you as soon as possible.\n- Feel free to open another ticket if this one is closed.`
+            `Hello ${user}, Bem-vindo ao seu ticket!\n- Por favor, nos descreva seu problema\n- Você receberá uma resposta em breve.\n- Sinta-se livre para abrir outro ticket se esse for fechado.`
         )
-        .setFooter({ text: 'Your satisfaction is our priority', iconURL: ticketIcons.heartIcon })
-        .setColor('#00FF00')
+        .setFooter({ text: 'Sua satisfação é nossa prioridade.', iconURL: ticketIcons.heartIcon })
+        .setColor('#9900FF')
         .setTimestamp();
 
     const closeButton = new ButtonBuilder()
         .setCustomId(`close_ticket_${ticketId}`)
-        .setLabel('Close Ticket')
+        .setLabel('Fechar Ticket')
         .setStyle(ButtonStyle.Danger);
 
     const actionRow = new ActionRowBuilder().addComponents(closeButton);
@@ -229,22 +229,23 @@ async function handleSelectMenu(interaction, client) {
 
     const embed = new EmbedBuilder()
         .setColor(0x0099ff)
+        .setImage('https://media.discordapp.net/attachments/1335584527413809172/1337940563202146324/193_Sem_Titulo_20250208211747.png?ex=67ab4000&is=67a9ee80&hm=5c1b0d32b946bc60b6e00c0f2c3801b0592501d8a662ad0de09d0cd96b4c5d6c&=&width=812&height=397')
         .setAuthor({
-            name: "Ticket Created!",
+            name: "Ticket Criado!",
             iconURL: ticketIcons.correctIcon,
-            url: "https://discord.gg/xQF9f9yUEM"
+            url: "https://dsc.gg/nextech"
         })
-        .setDescription(`- Your ${ticketType} ticket has been created.`)
+        .setDescription(`- Seu ticket de ${ticketType} foi criado.`)
         .addFields(
-            { name: 'Ticket Channel', value: `${ticketChannel.url}` },
-            { name: 'Instructions', value: 'Please describe your issue in detail.' }
+            { name: 'Canal de Ticket', value: `${ticketChannel.url}` },
+            { name: 'Instruções', value: 'Por favor, detalhe seu problema.' }
         )
         .setTimestamp()
-        .setFooter({ text: 'Thank you for reaching out!', iconURL: ticketIcons.modIcon });
+        .setFooter({ text: 'Obrigado por nos contatar :P', iconURL: ticketIcons.modIcon });
 
     try {
         await user.send({
-            content: `Your ${ticketType} ticket has been created`,
+            content: `Seu ticket de ${ticketType} foi criado.`,
             embeds: [embed]
         });
     } catch (error) {
@@ -280,7 +281,7 @@ async function handleCloseButton(interaction, client) {
     }
     if (!ticket) {
         return interaction.followUp({
-            content: 'Ticket not found. Please report to staff!',
+            content: 'Ticket não encontrado, reporte o bug para o Administrador.',
             flags: 64
         });
     }
@@ -312,27 +313,27 @@ async function handleCloseButton(interaction, client) {
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setAuthor({
-                name: "Ticket closed!",
+                name: "Ticket fechado!",
                 iconURL: ticketIcons.correctrIcon,
-                url: "https://discord.gg/xQF9f9yUEM"
+                url: "https://dsc.gg/nextech"
             })
-            .setDescription(`- Your ticket has been closed.`)
+            .setDescription(`- Seu ticket foi fechado.`)
             .setTimestamp()
-            .setFooter({ text: 'Thank you for reaching out!', iconURL: ticketIcons.modIcon });
+            .setFooter({ text: 'Obrigado por nos contatar :P', iconURL: ticketIcons.modIcon });
 
         try {
             await ticketUser.send({
-                content: `Your ticket has been closed.`,
+                content: `Seu ticket foi fechado.`,
                 embeds: [embed]
             });
         } catch (error) {
-            console.error("Error sending DM to ticket user:", error);
+            console.error("Erro ao enviar dms ao usuário:", error);
         }
     }
 
     try {
         await interaction.followUp({
-            content: 'Ticket closed and user notified.',
+            content: 'Ticket fechado e usuário notificado.',
             flags: 64
         });
     } catch (error) {
