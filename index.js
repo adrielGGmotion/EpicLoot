@@ -39,6 +39,11 @@ const loadEventHandlers = () => {
     const ticketHandler = require('./events/ticketHandler');
     ticketHandler(client);
     logSystem('TICKET');
+    
+
+    const newsHandler = require('./events/news');
+    newsHandler(client);
+    logSystem('NEWS');
 
   
     const voiceChannelHandler = require('./events/voiceChannelHandler');
