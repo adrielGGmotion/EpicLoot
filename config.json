@@ -1,12 +1,12 @@
 {
     "token": "",
     "language": "en",
-    "prefix": "!",
-    "mongodbUri": "",
+    "prefix": "$",
+    "mongodbUri": "mongodb+srv://nextai:nextbotpass@cluster0.iuzzl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
     "excessCommands": {
         "utility": true,
         "other": true,
-        "hentai": true,
+        "hentai": false,
         "troll": true,
         "levelling" : true,
         "lavalink" : true,
@@ -18,13 +18,13 @@
         "report" : true
     },
     "categories": {
-        "anime": true,
+        "anime": false,
         "basic": true,
         "utility": true,
         "moderation": true,
         "core" :true,
         "lavalink": true,
-        "fun": true,
+        "fun": false,
         "distube": true,
         "setups": true
     },
