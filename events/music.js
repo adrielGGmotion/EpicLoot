@@ -69,28 +69,28 @@ module.exports = (client) => {
                     thumbnailURL: track.info.thumbnail,
                     songTitle: track.info.title,
                     songArtist: track.info.author,
-                    trackRequester: track.requester ? track.requester.username : "All In One",
+                    trackRequester: track.requester ? track.requester.username : "Next AI",
                     fontPath: path.join(__dirname, "../UI", "fonts", "AfacadFlux-Regular.ttf"),
                     backgroundColor: "#FF00FF",
                 });
         
                 const attachment = new AttachmentBuilder(cardImage, { name: 'songcard.png' });
         
-                const description = `- Title: ${track.info.title} \n`+
-               ` - Artist: ${track.info.author} \n`+
-               ` - Length: ${formatTime(track.info.length)} (\`${track.info.length}ms\`) \n`+
-               ` - Stream: ${track.info.stream ? "Yes" : "No"} \n`+
-               ` - Seekable: ${track.info.seekable ? "Yes" : "No"} \n`+
+                const description = `- Título: ${track.info.title} \n`+
+               ` - Artista: ${track.info.author} \n`+
+               ` - Duração: ${formatTime(track.info.length)} (\`${track.info.length}ms\`) \n`+
+               ` - Stream: ${track.info.stream ? "Sim" : "Não"} \n`+
+               ` - Pesquisável: ${track.info.seekable ? "Sim" : "Não"} \n`+
                ` - URI: [Link](${track.info.uri}) \n`+
-               ` - Source: ${track.info.sourceName} \n`+ 
-               ` - Requested by: ${track.requester ? `<@${track.requester.id}>` : "Unknown"}`; 
+               ` - Fonte: ${track.info.sourceName} \n`+ 
+               ` - Pedido por: ${track.requester ? `<@${track.requester.id}>` : "Unknown"}`; 
                 
                 const embed = new EmbedBuilder()
-                    .setAuthor({ name: "Now Playing..", iconURL: musicIcons.playerIcon, url: "https://discord.gg/xQF9f9yUEM" })
+                    .setAuthor({ name: "Tocando agora...", iconURL: musicIcons.playerIcon, url: "https://dsc.gg/nextech" })
                     .setDescription(description)
                     .setImage('attachment://songcard.png')
-                    .setFooter({ text: 'Let the Beat Drop!', iconURL: musicIcons.footerIcon })
-                    .setColor('#00c3ff');
+                    .setFooter({ text: 'Distube Player', iconURL: musicIcons.footerIcon })
+                    .setColor('#9900ff');
         
                 // Conditionally create buttons only if track.requester is defined.
                 let components = [];
@@ -151,7 +151,7 @@ module.exports = (client) => {
                 player.autoplay(player);
             } else {
                 player.destroy();
-                channel.send("Queue has ended.");
+                channel.send("A fila acabou.");
             }
             if (player.currentMessageId) {
                 setTimeout(async () => {
@@ -189,27 +189,27 @@ module.exports = (client) => {
                 switch (action) {
                     case 'volume_up':
                         player.setVolume(Math.min(player.volume + 10, 100));
-                        await interaction.editReply('🔊 Volume increased!');
+                        await interaction.editReply('🔊 Volume aumentado!');
                         break;
         
                     case 'volume_down':
                         player.setVolume(Math.max(player.volume - 10, 0));
-                        await interaction.editReply('🔉 Volume decreased!');
+                        await interaction.editReply('🔉 Volume diminuido!');
                         break;
         
                     case 'pause':
                         player.pause(true);
-                        await interaction.editReply('⏸️ Player paused.');
+                        await interaction.editReply('⏸️ Player pausado.');
                         break;
         
                     case 'resume':
                         player.pause(false);
-                        await interaction.editReply('▶️ Player resumed.');
+                        await interaction.editReply('▶️ Player resumido.');
                         break;
         
                     case 'skip':
                         player.stop();
-                        await interaction.editReply('⏭️ Skipped to the next track.');
+                        await interaction.editReply('⏭️ Pulando para a próxima música!');
                         break;
         
                     case 'stop': {
@@ -237,44 +237,44 @@ module.exports = (client) => {
                             }
                         }
                         player.destroy();
-                        await interaction.editReply('⏹️ Stopped the music and disconnected.');
+                        await interaction.editReply('Parei a música, desconectandooo :P');
                         break;
                     }
         
                     case 'clear_queue':
                         player.queue.clear();
-                        await interaction.editReply('🗑️ Queue cleared.');
+                        await interaction.editReply('🗑️Fila engolida com sucesso 😋.');
                         break;
         
                     case 'shuffle':
                         player.queue.shuffle();
-                        await interaction.editReply('🔀 Queue shuffled!');
+                        await interaction.editReply('🔀 Fila misturada!');
                         break;
         
                     case 'loop':
                         const loopMode = player.loop === 'none' ? 'track' : player.loop === 'track' ? 'queue' : 'none';
                         player.setLoop(loopMode);
-                        await interaction.editReply(`🔁 Loop mode set to: **${loopMode}**.`);
+                        await interaction.editReply(`🔁 Modo loop definido como: **${loopMode}**.`);
                         break;
         
                     case 'show_queue':
                         if (!player.queue || player.queue.length === 0) {
-                            await interaction.editReply('❌ The queue is empty.');
+                            await interaction.editReply('❌ A fila está vazia.');
                         } else {
                             const queueStr = player.queue
                                 .map((track, i) => `${i + 1}. **${track.info.title}**`)
                                 .join('\n');
-                            await interaction.editReply(`🎶 **Queue:**\n${queueStr}`);
+                            await interaction.editReply(`🎶 **Fila:**\n${queueStr}`);
                         }
                         break;
         
                     default:
-                        await interaction.editReply('❌ Unknown action.');
+                        await interaction.editReply('❌ Ação desconhecida.');
                         break;
                 }
             } catch (error) {
                 //console.error('Error handling button interaction:', error);
-                await interaction.editReply('❌ Something went wrong.');
+                await interaction.editReply('❌ Algo deu errado.');
             }
         });
         
