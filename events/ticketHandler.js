@@ -288,22 +288,55 @@ async function handleCloseButton(interaction, client) {
 
     const ticketChannel = guild.channels.cache.get(ticket.channelId);
     if (ticketChannel) {
-        try {
-            await ticketChannel.permissionOverwrites.edit(ticket.userId, {
-                VIEW_CHANNEL: false
-            });
+        setTimeout(async () => {
+            try {
+                await ticketChannel.delete();
+            } catch (error) {
+                console.error("Error deleting ticket channel:", error);
+            }
+        }, 5000);
+    }
 
-            await interaction.followUp({
-                content: 'Ticket closed and user permissions removed.',
-                flags: 64
+    try {
+        await ticketsCollection.deleteOne({ id: ticketId });
+    } catch (error) {
+        console.error("Error deleting ticket from the database:", error);
+    }
+
+    let ticketUser;
+    try {
+        ticketUser = await client.users.fetch(ticket.userId);
+    } catch (error) {
+        console.error("Error fetching ticket user:", error);
+    }
+    if (ticketUser) {
+        const embed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setAuthor({
+                name: "Ticket fechado!",
+                iconURL: ticketIcons.correctrIcon,
+                url: "https://dsc.gg/nextech"
+            })
+            .setDescription(`- Seu ticket foi fechado.`)
+            .setTimestamp()
+            .setFooter({ text: 'Obrigado por nos contatar :P', iconURL: ticketIcons.modIcon });
+
+        try {
+            await ticketUser.send({
+                content: `Seu ticket foi fechado.`,
+                embeds: [embed]
             });
         } catch (error) {
-            console.error("Error removing permissions from ticket creator:", error);
-            return interaction.followUp({
-                content: 'Error closing ticket. Please try again.',
-                flags: 64
-            });
+            console.error("Erro ao enviar dms ao usuário:", error);
         }
     }
-}
+
+    try {
+        await interaction.followUp({
+            content: 'Ticket fechado e usuário notificado.',
+            flags: 64
+        });
+    } catch (error) {
+        console.error("Error sending follow-up for ticket closure:", error);
+    }
 }
