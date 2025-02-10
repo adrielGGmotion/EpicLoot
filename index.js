@@ -79,6 +79,10 @@ const loadEventHandlers = () => {
     afkHandler(client);
     logSystem('AFK');
 
+    const newsHandler = require('./events/newsHandler');
+    newsHandler(client);
+    logSystem('NEWS');
+
     console.log(`\n${colors.magenta}${colors.bright}🔔 NOTIFICATION SYSTEMS${colors.reset}`);
     console.log('─'.repeat(40));
 
