@@ -28,11 +28,6 @@ async function dynamicCard({
   // ✅ Draw background image
   ctx.drawImage(backgroundImage, 0, 0);
 
-  // 🔥 Add a blur layer on top of the background
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black for blur effect
-  ctx.filter = "blur(10px)"; // Apply blur effect
-  ctx.fillRect(0, 0, cardWidth, cardHeight);
-  ctx.filter = "none"; // Reset filter for other elements
 
   // 🖼️ Load the thumbnail image
   const thumbnailImage = await loadImage(thumbnailURL);
