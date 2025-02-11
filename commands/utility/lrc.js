@@ -11,17 +11,27 @@ module.exports = {
     .addStringOption(option =>
       option.setName('musica')
         .setDescription('Nome da música')
-        .setRequired(true)
+        .setRequired(false)
     )
     .addStringOption(option =>
       option.setName('artista')
         .setDescription('Nome do artista')
-        .setRequired(true)
+        .setRequired(false)
+    )
+    .addAttachmentOption(option =>
+      option.setName('arquivo')
+        .setDescription('Arquivo de música')
+        .setRequired(false)
     ),
 
   async execute(interaction) {
-    const trackName = interaction.options.getString('musica').trim();
-    const artistName = interaction.options.getString('artista').trim();
+    const trackName = interaction.options.getString('musica')?.trim();
+    const artistName = interaction.options.getString('artista')?.trim();
+    const attachment = interaction.options.getAttachment('arquivo');
+
+    if (!trackName || !artistName) {
+      return interaction.reply('Por favor, forneça o nome da música e o artista, ou envie um arquivo de música.');
+    }
 
     try {
       const apiUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(trackName)}&artist_name=${encodeURIComponent(artistName)}`;
@@ -38,9 +48,16 @@ module.exports = {
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
-      const sanitizedTrackName = sanitize(trackName);
-      const sanitizedArtistName = sanitize(artistName);
-      const fileName = `${sanitizedTrackName} - ${sanitizedArtistName}.lrc`;
+      let fileName;
+      if (attachment) {
+        const originalName = path.parse(attachment.name).name;
+        fileName = `${sanitize(originalName)}.lrc`;
+      } else {
+        const sanitizedTrackName = sanitize(trackName);
+        const sanitizedArtistName = sanitize(artistName);
+        fileName = `${sanitizedTrackName} - ${sanitizedArtistName}.lrc`;
+      }
+
       const filePath = path.join(tempDir, fileName);
 
       fs.writeFileSync(filePath, lyrics, 'utf8');
