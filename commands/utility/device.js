@@ -15,7 +15,7 @@ module.exports = {
     
     try {
       // Requisição para o proxy
-      const response = await axios.get(`https://teu-proxy-no-render.onrender.com/device?q=${encodeURIComponent(deviceName)}`);
+      const response = await axios.get(`https://myproxyserver-ko2u.onrender.com/device?q=${encodeURIComponent(deviceName)}`);
       const data = response.data;
 
       if (data.error) {
