@@ -10,63 +10,63 @@ module.exports = {
                 .setDescription('Nome do dispositivo')
                 .setRequired(true)),
     
-async execute(interaction) {
-    const deviceNameOption = interaction.options.getString('nome');
-    console.log('Device name option:', deviceNameOption); // Add this line to log the retrieved option
+    async execute(interaction) {
+        const deviceNameOption = interaction.options.getString('nome');
+        console.log('Device name option:', deviceNameOption); // Add this line to log the retrieved option
 
-    if (!deviceNameOption) {
-        return interaction.editReply('O nome do dispositivo é obrigatório.');
-    }
+        if (!deviceNameOption) {
+            return interaction.editReply('O nome do dispositivo é obrigatório.');
+        }
 
-    const deviceName = deviceNameOption.toLowerCase();
-    const baseUrl = 'https://gsmarena2api.onrender.com/api';
+        const deviceName = deviceNameOption.toLowerCase();
+        const baseUrl = 'https://gsmarena2api.onrender.com/api';
 
-    await interaction.deferReply();
+        await interaction.deferReply();
 
-    try {
-        // 1. Buscar todas as marcas
-        const brandsResponse = await axios.get(`${baseUrl}/brands`);
-        const brands = brandsResponse.data.brands;
-        
-        let foundDevices = [];
-        
-        // 2. Buscar dispositivos dentro de cada marca
-        for (const brand of brands) {
-            const brandDevicesResponse = await axios.get(`${baseUrl}/brands/${brand.id}`);
-            const devices = brandDevicesResponse.data.devices;
+        try {
+            // 1. Buscar todas as marcas
+            const brandsResponse = await axios.get(`${baseUrl}/brands`);
+            const brands = brandsResponse.data.brands;
             
-            // 3. Filtrar dispositivos pelo nome
-            const matchedDevices = devices.filter(device => device.name.toLowerCase().includes(deviceName));
-            foundDevices = foundDevices.concat(matchedDevices);
+            let foundDevices = [];
+            
+            // 2. Buscar dispositivos dentro de cada marca
+            for (const brand of brands) {
+                const brandDevicesResponse = await axios.get(`${baseUrl}/brands/${brand.id}`);
+                const devices = brandDevicesResponse.data.devices;
+                
+                // 3. Filtrar dispositivos pelo nome
+                const matchedDevices = devices.filter(device => device.name.toLowerCase().includes(deviceName));
+                foundDevices = foundDevices.concat(matchedDevices);
+            }
+            
+            if (foundDevices.length === 0) {
+                return interaction.editReply('Nenhum dispositivo encontrado com esse nome.');
+            }
+            
+            if (foundDevices.length === 1) {
+                return sendDeviceEmbed(interaction, foundDevices[0]);
+            }
+            
+            // Se houver múltiplos dispositivos, criar um menu de seleção
+            const options = foundDevices.map(device => ({
+                label: device.name,
+                value: device.id
+            }));
+            
+            const row = new ActionRowBuilder().addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId('select_device')
+                    .setPlaceholder('Selecione um dispositivo')
+                    .addOptions(options)
+            );
+            
+            interaction.editReply({ content: 'Selecione um dispositivo:', components: [row] });
+        } catch (error) {
+            console.error(error);
+            interaction.editReply('Ocorreu um erro ao buscar o dispositivo.');
         }
-        
-        if (foundDevices.length === 0) {
-            return interaction.editReply('Nenhum dispositivo encontrado com esse nome.');
-        }
-        
-        if (foundDevices.length === 1) {
-            return sendDeviceEmbed(interaction, foundDevices[0]);
-        }
-        
-        // Se houver múltiplos dispositivos, criar um menu de seleção
-        const options = foundDevices.map(device => ({
-            label: device.name,
-            value: device.id
-        }));
-        
-        const row = new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-                .setCustomId('select_device')
-                .setPlaceholder('Selecione um dispositivo')
-                .addOptions(options)
-        );
-        
-        interaction.editReply({ content: 'Selecione um dispositivo:', components: [row] });
-    } catch (error) {
-        console.error(error);
-        interaction.editReply('Ocorreu um erro ao buscar o dispositivo.');
-    }
-}
+    },
     
     async selectDeviceInteraction(interaction) {
         if (!interaction.isStringSelectMenu() || interaction.customId !== 'select_device') return;
