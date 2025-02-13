@@ -11,7 +11,6 @@ const { Dynamic } = require('musicard');
 const config = require('./config.json');
 const musicIcons = require('./UI/icons/musicicons');
 const colors = require('./UI/colors/colors');
-module.exports = { data, execute, selectDeviceInteraction };
 const loadLogHandlers = require('./logHandlers');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const client = new Client({
