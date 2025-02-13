@@ -12,7 +12,7 @@ module.exports = {
     
     async execute(interaction) {
         const deviceName = interaction.options.getString('nome');
-        const apiUrl = `https://gsmarena-api-e7m9.onrender.com/api/search?name=${encodeURIComponent(deviceName)}`;
+        const apiUrl = `https://gsmarena-api-lptq.onrender.com/api/search?name=${encodeURIComponent(deviceName)}`;
         
         await interaction.deferReply();
         
