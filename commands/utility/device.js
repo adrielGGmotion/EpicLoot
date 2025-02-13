@@ -15,15 +15,12 @@ module.exports = {
         const apiUrl = `https://gsmarena-api-lptq.onrender.com/api/search?name=${encodeURIComponent(deviceName)}`;
         
         await interaction.deferReply();
-        console.log(`Comando recebido: /device ${deviceName}`);
         
         try {
             const response = await axios.get(apiUrl);
-            console.log(`Resposta da API:`, response.data);
             const devices = response.data.devices;
             
             if (!devices || devices.length === 0) {
-                console.log("Nenhum dispositivo encontrado.");
                 return interaction.editReply('Nenhum dispositivo encontrado.');
             }
             
@@ -43,37 +40,35 @@ module.exports = {
                     .addOptions(options)
             );
             
-            console.log("Lista de seleção enviada.");
             interaction.editReply({ content: 'Selecione um dispositivo:', components: [row] });
         } catch (error) {
             console.error("Erro ao buscar dispositivos:", error);
             interaction.editReply('Ocorreu um erro ao buscar o dispositivo.');
         }
-    },
+    }
+};
+
+// Captura a interação com a lista de seleção
+this.interactionHandler = async (interaction) => {
+    if (!interaction.isStringSelectMenu() || interaction.customId !== 'select_device') return;
     
-    async selectDeviceInteraction(interaction) {
-        if (!interaction.isStringSelectMenu() || interaction.customId !== 'select_device') return;
-        
-        await interaction.deferUpdate();
-        console.log(`Usuário selecionou um dispositivo: ${interaction.values[0]}`);
-        
-        const deviceId = interaction.values[0];
-        const apiUrl = `https://gsmarena-api-lptq.onrender.com/api/devices/${deviceId}`;
-        
-        try {
-            const response = await axios.get(apiUrl);
-            console.log("Resposta da API para o dispositivo selecionado:", response.data);
-            const device = response.data.device;
-            await sendDeviceEmbed(interaction, device);
-        } catch (error) {
-            console.error("Erro ao buscar detalhes do dispositivo:", error);
-            interaction.followUp({ content: 'Ocorreu um erro ao buscar o dispositivo.', ephemeral: true });
-        }
+    await interaction.deferUpdate();
+    console.log(`Usuário selecionou: ${interaction.values[0]}`);
+    
+    const deviceId = interaction.values[0];
+    const apiUrl = `https://gsmarena-api-lptq.onrender.com/api/devices/${deviceId}`;
+    
+    try {
+        const response = await axios.get(apiUrl);
+        const device = response.data.device;
+        await sendDeviceEmbed(interaction, device);
+    } catch (error) {
+        console.error("Erro ao buscar detalhes do dispositivo:", error);
+        interaction.followUp({ content: 'Ocorreu um erro ao buscar o dispositivo.', ephemeral: true });
     }
 };
 
 async function sendDeviceEmbed(interaction, device) {
-    console.log(`Enviando embed para: ${device.name}`);
     const embed = new EmbedBuilder()
         .setTitle(device.name)
         .setURL(device.url)
