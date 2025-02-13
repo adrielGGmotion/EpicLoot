@@ -11,46 +11,25 @@ module.exports = {
                 .setRequired(true)),
     
     async execute(interaction) {
-        const deviceName = interaction.options.getString('nome').toLowerCase();
-        const baseUrl = 'https://gsmarena2api.onrender.com/api';
+        const deviceName = interaction.options.getString('nome');
+        const apiUrl = `https://gsmarena-api-e7m9.onrender.com/api/search?name=${encodeURIComponent(deviceName)}`;
         
         await interaction.deferReply();
         
         try {
-            // 1. Buscar todas as marcas
-            const brandsResponse = await axios.get(`${baseUrl}/brands`);
-            const brands = brandsResponse.data.brands || [];
+            const response = await axios.get(apiUrl);
+            const devices = response.data.devices;
             
-            let foundDevices = [];
-            
-            // 2. Buscar dispositivos dentro de cada marca
-            for (const brand of brands) {
-                try {
-                    const brandDevicesResponse = await axios.get(`${baseUrl}/brands/${brand.id}`);
-                    const devices = brandDevicesResponse.data.devices || [];
-                    
-                    // 3. Filtrar dispositivos pelo nome (busca mais flexível)
-                    const matchedDevices = devices.filter(device => 
-                        device.name.toLowerCase().includes(deviceName)
-                    );
-                    
-                    foundDevices = foundDevices.concat(matchedDevices);
-                } catch (error) {
-                    console.warn(`Erro ao buscar dispositivos da marca ${brand.name}:`, error.message);
-                }
+            if (!devices || devices.length === 0) {
+                return interaction.editReply('Nenhum dispositivo encontrado.');
             }
             
-            if (foundDevices.length === 0) {
-                return interaction.editReply('Nenhum dispositivo encontrado com esse nome.');
+            if (devices.length === 1) {
+                return sendDeviceEmbed(interaction, devices[0]);
             }
             
-            if (foundDevices.length === 1) {
-                return sendDeviceEmbed(interaction, foundDevices[0]);
-            }
-            
-            // Se houver múltiplos dispositivos, criar um menu de seleção
-            const options = foundDevices.slice(0, 25).map(device => ({
-                label: device.name.slice(0, 100),
+            const options = devices.slice(0, 25).map(device => ({
+                label: device.name,
                 value: device.id
             }));
             
@@ -63,7 +42,7 @@ module.exports = {
             
             interaction.editReply({ content: 'Selecione um dispositivo:', components: [row] });
         } catch (error) {
-            console.error('Erro ao buscar marcas:', error.message);
+            console.error(error);
             interaction.editReply('Ocorreu um erro ao buscar o dispositivo.');
         }
     },
@@ -74,14 +53,14 @@ module.exports = {
         await interaction.deferUpdate();
         
         const deviceId = interaction.values[0];
-        const apiUrl = `https://gsmarena2api.onrender.com/api/devices/${deviceId}`;
+        const apiUrl = `https://gsmarena-api-e7m9.onrender.com/api/devices/${deviceId}`;
         
         try {
             const response = await axios.get(apiUrl);
             const device = response.data.device;
             await sendDeviceEmbed(interaction, device);
         } catch (error) {
-            console.error('Erro ao buscar especificações do dispositivo:', error.message);
+            console.error(error);
             interaction.followUp({ content: 'Ocorreu um erro ao buscar o dispositivo.', ephemeral: true });
         }
     }
@@ -91,8 +70,8 @@ async function sendDeviceEmbed(interaction, device) {
     const embed = new EmbedBuilder()
         .setTitle(device.name)
         .setURL(device.url)
-        .setThumbnail(device.thumbnail)
-        .setDescription(device.summary || 'Sem descrição disponível')
+        .setThumbnail(device.img)
+        .setDescription(`**Marca:** ${device.brand}\n[Ver especificações completas](${device.url})`)
         .setColor('#9900FF')
         .setFooter({ text: 'Powered by Next AI & GSMArena2API' });
     
