@@ -3,7 +3,7 @@ const axios = require('axios');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('device')
+        .setName('device2')
         .setDescription('Busca especificações de um dispositivo Android')
         .addStringOption(option =>
             option.setName('nome')
