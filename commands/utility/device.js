@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('device')
-        .setDescription('Busca especificações de um dispositivo Android na GSMArena')
+        .setDescription('Busca especificações de um dispositivo')
         .addStringOption(option =>
             option.setName('nome')
                 .setDescription('Nome do dispositivo')
@@ -53,7 +53,7 @@ module.exports = {
         await interaction.deferUpdate();
         
         const deviceId = interaction.values[0];
-        const apiUrl = `https://gsmarena-api-e7m9.onrender.com/api/devices/${deviceId}`;
+        const apiUrl = `https://gsmarena-api-lptq.onrender.com/api/devices/${deviceId}`;
         
         try {
             const response = await axios.get(apiUrl);
