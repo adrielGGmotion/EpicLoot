@@ -67,7 +67,6 @@ this.interactionHandler = async (interaction) => {
         interaction.followUp({ content: 'Ocorreu um erro ao buscar o dispositivo.', ephemeral: true });
     }
 };
-    module.exports = { data, execute, selectDeviceInteraction };
 
 async function sendDeviceEmbed(interaction, device) {
     const embed = new EmbedBuilder()
@@ -81,3 +80,5 @@ async function sendDeviceEmbed(interaction, device) {
     interaction.editReply({ embeds: [embed], components: [] });
 
 } 
+
+module.exports = { data, execute, selectDeviceInteraction };
