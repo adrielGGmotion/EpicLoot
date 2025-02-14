@@ -76,7 +76,7 @@ module.exports = {
 // Função para buscar as especificações e enviar o embed
 async function enviarEmbed(interaction, apiBaseUrl, device) {
     try {
-        const deviceResponse = await axios.get(`${apiBaseUrl}/device?device_id=${device.id}`);
+        const deviceResponse = await axios.get(`${apiBaseUrl}/api/device/${device.id}`);
         const deviceData = deviceResponse.data;
 
         const embed = new EmbedBuilder()
