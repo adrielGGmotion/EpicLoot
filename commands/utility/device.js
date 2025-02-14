@@ -78,4 +78,7 @@ async function sendDeviceEmbed(interaction, device) {
         .setFooter({ text: 'Powered by Next AI & GSMArena2API' });
     
     interaction.editReply({ embeds: [embed], components: [] });
+
 } 
+
+module.exports = { data, execute, selectDeviceInteraction };
