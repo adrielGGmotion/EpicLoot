@@ -3,6 +3,7 @@ const path = require('path');
 const client = require('./main');
 require('./bot');
 require('./shiva');
+const { selectDeviceInteraction } = require('./commands/utility/device');
 
 const loadEventHandlers = () => {
     const colors = require('./UI/colors/colors');
@@ -77,7 +78,7 @@ const loadEventHandlers = () => {
     const startYouTubeNotifications = require('./events/youTubeHandler');
     const startTwitchNotifications = require('./events/twitchHandler');
     const startFacebookNotifications = require('./events/facebookHandler');
-    const startInstagramNotifications = require('./events/instagramHandler');
+    const startInstagramNotifications = require('./events/instagramHandler);
 
     startYouTubeNotifications(client);
     logSystem('YOUTUBE');
@@ -104,6 +105,11 @@ const loadEventHandlers = () => {
 
     console.log(`${colors.green}${colors.bright}Status: ${colors.reset}${colors.green}All systems operational${colors.reset}`);
     console.log(`${colors.gray}Last checked: ${colors.reset}${colors.cyan}${new Date().toLocaleTimeString()}${colors.reset}\n`);
+
+    const interactionCreateHandler = (interaction) => {
+        selectDeviceInteraction(interaction);
+    };
+    client.on('interactionCreate', interactionCreateHandler);
 };
 
 const refreshCommands = () => {
