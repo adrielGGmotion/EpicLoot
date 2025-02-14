@@ -112,7 +112,6 @@ const loadEventHandlers = () => {
     client.on('interactionCreate', interactionCreateHandler);
 };
 
-// Function to recursively load commands from subdirectories
 const loadCommands = (dir) => {
     const files = fs.readdirSync(dir);
     for (const file of files) {
@@ -121,7 +120,12 @@ const loadCommands = (dir) => {
             loadCommands(filePath);
         } else if (file.endsWith('.js')) {
             delete require.cache[require.resolve(filePath)];
-            require(filePath)(client);
+            const command = require(filePath);
+            if (typeof command === 'function') {
+                command(client);
+            } else if (typeof command.execute === 'function') {
+                client.commands.set(command.data.name, command);
+            }
         }
     }
 };
