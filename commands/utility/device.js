@@ -10,7 +10,7 @@ module.exports = {
                 .setDescription('Nome do dispositivo')
                 .setRequired(true)
         ),
-    
+
     async execute(interaction) {
         await interaction.deferReply(); // Evita timeout
 
@@ -20,21 +20,21 @@ module.exports = {
         try {
             // Buscar dispositivos pelo nome
             const searchResponse = await axios.get(`${apiBaseUrl}/search?name=${encodeURIComponent(nome)}`);
-            const devices = searchResponse.data;
+            const { success, devices } = searchResponse.data;
 
-            if (!devices || devices.length === 0) {
+            if (!success || !devices || devices.length === 0) {
                 return interaction.editReply('Nenhum dispositivo encontrado.');
             }
 
             if (devices.length === 1) {
-                return enviarEmbed(interaction, apiBaseUrl, devices[0].device_id);
+                return enviarEmbed(interaction, apiBaseUrl, devices[0]);
             }
 
-            // Se houver múltiplos dispositivos, cria um menu de seleção
+            // Criar um menu de seleção com os dispositivos encontrados
             const options = devices.map(device => 
                 new StringSelectMenuOptionBuilder()
                     .setLabel(device.name)
-                    .setValue(device.device_id)
+                    .setValue(device.id) // Usamos o device_id diretamente
             );
 
             const selectMenu = new StringSelectMenuBuilder()
@@ -52,7 +52,12 @@ module.exports = {
 
             collector.on('collect', async i => {
                 await i.deferUpdate();
-                await enviarEmbed(i, apiBaseUrl, i.values[0]);
+                const selectedDevice = devices.find(d => d.id === i.values[0]);
+                if (selectedDevice) {
+                    await enviarEmbed(i, apiBaseUrl, selectedDevice);
+                } else {
+                    await i.editReply({ content: 'Dispositivo não encontrado.', components: [] });
+                }
             });
 
             collector.on('end', collected => {
@@ -69,15 +74,15 @@ module.exports = {
 };
 
 // Função para buscar as especificações e enviar o embed
-async function enviarEmbed(interaction, apiBaseUrl, deviceId) {
+async function enviarEmbed(interaction, apiBaseUrl, device) {
     try {
-        const deviceResponse = await axios.get(`${apiBaseUrl}/device?device_id=${deviceId}`);
-        const device = deviceResponse.data;
+        const deviceResponse = await axios.get(`${apiBaseUrl}/device?device_id=${device.id}`);
+        const deviceData = deviceResponse.data;
 
         const embed = new EmbedBuilder()
-            .setTitle(device.name)
-            .setThumbnail(device.img)
-            .setDescription(device.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n'))
+            .setTitle(deviceData.name)
+            .setThumbnail(deviceData.img || device.img) // Usa a imagem já disponível na busca
+            .setDescription(deviceData.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n'))
             .setColor('#0099ff');
 
         await interaction.editReply({ content: '', embeds: [embed], components: [] });
