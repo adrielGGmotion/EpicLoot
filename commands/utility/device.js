@@ -81,7 +81,7 @@ async function enviarEmbed(interaction, apiBaseUrl, device) {
 
         const embed = new EmbedBuilder()
             .setTitle(deviceData.name)
-            .setThumbnail(deviceData.img || device.img) // Usa a imagem já disponível na busca
+            .setThumbnail(deviceData.img || device.img)
             .setDescription(deviceData.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n'))
             .setColor('#0099ff');
 
@@ -92,3 +92,4 @@ async function enviarEmbed(interaction, apiBaseUrl, device) {
         interaction.editReply('Erro ao buscar detalhes do dispositivo.');
     }
 }
+
