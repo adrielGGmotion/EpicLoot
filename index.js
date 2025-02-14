@@ -78,7 +78,7 @@ const loadEventHandlers = () => {
     const startYouTubeNotifications = require('./events/youTubeHandler');
     const startTwitchNotifications = require('./events/twitchHandler');
     const startFacebookNotifications = require('./events/facebookHandler');
-    const startInstagramNotifications = require('./events/instagramHandler);
+    const startInstagramNotifications = require('./events/instagramHandler');
 
     startYouTubeNotifications(client);
     logSystem('YOUTUBE');
