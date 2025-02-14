@@ -21,7 +21,7 @@ const loadEventHandlers = () => {
     const currentDate = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
     console.log('\n' + '═'.repeat(60));
-    console.log(`${colors.yellow}${colors.bright}             🤖 BOT SYSTEMS INITIALIZATION 🤖${colors.reset}`);
+    console.log(`${colors.yellow}${colors.bright} 🤖 BOT SYSTEMS INITIALIZATION 🤖${colors.reset}`);
     console.log('═'.repeat(60) + '\n');
 
     console.log(`\n${colors.magenta}${colors.bright}📡 CORE SYSTEMS${colors.reset}`);
@@ -100,18 +100,23 @@ const loadEventHandlers = () => {
     require('./shiva');
 
     console.log('\n' + '═'.repeat(60));
-    console.log(`${colors.green}${colors.bright}             ✨ ALL SYSTEMS INITIALIZED ✨${colors.reset}`);
+    console.log(`${colors.green}${colors.bright} ✨ ALL SYSTEMS INITIALIZED ✨${colors.reset}`);
     console.log('═'.repeat(60) + '\n');
 
     console.log(`${colors.green}${colors.bright}Status: ${colors.reset}${colors.green}All systems operational${colors.reset}`);
     console.log(`${colors.gray}Last checked: ${colors.reset}${colors.cyan}${new Date().toLocaleTimeString()}${colors.reset}\n`);
 
-    const interactionCreateHandler = (interaction) => {
-        selectDeviceInteraction(interaction);
+    const interactionCreateHandler = async (interaction) => {
+        if (interaction.isCommand() && interaction.commandName === 'device') {
+            await require('./commands/utility/device').execute(interaction);
+        } else if (interaction.isStringSelectMenu() && interaction.customId === 'select_device') {
+            await selectDeviceInteraction(interaction);
+        }
     };
     client.on('interactionCreate', interactionCreateHandler);
 };
 
+// Function to recursively load commands from subdirectories
 const loadCommands = (dir) => {
     const files = fs.readdirSync(dir);
     for (const file of files) {
