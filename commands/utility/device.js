@@ -15,7 +15,7 @@ module.exports = {
         await interaction.deferReply(); // Evita timeout
 
         const nome = interaction.options.getString('nome');
-        const apiBaseUrl = 'https://seu-api-render.onrender.com/api'; // Substitua pelo seu link real
+        const apiBaseUrl = 'https://gsmarena-api-lptq.onrender.com//api'; // Substitua pelo seu link real
 
         try {
             // Buscar dispositivos pelo nome
