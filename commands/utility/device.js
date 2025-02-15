@@ -51,14 +51,16 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
 
             collector.on('collect', async i => {
-                await i.deferUpdate();
-                const selectedDevice = devices.find(d => d.id === i.values[0]);
-                if (selectedDevice) {
-                    await enviarEmbed(i, apiBaseUrl, selectedDevice);
-                } else {
-                    await i.editReply({ content: 'Dispositivo não encontrado.', components: [] });
-                }
-            });
+    await i.deferUpdate(); // Evita timeout na resposta do Discord
+
+    const selectedDevice = devices.find(d => d.id === i.values[0]);
+    if (selectedDevice) {
+        await enviarEmbed(i, apiBaseUrl, selectedDevice);
+    } else {
+        await i.editReply({ content: 'Erro ao encontrar o dispositivo.', components: [] });
+    }
+});
+
 
             collector.on('end', collected => {
                 if (collected.size === 0) {
