@@ -15,10 +15,9 @@ module.exports = {
         await interaction.deferReply(); // Evita timeout
 
         const nome = interaction.options.getString('nome');
-        const apiBaseUrl = 'https://gsmarena-api-lptq.onrender.com'; // Substitua pelo seu link real
+        const apiBaseUrl = 'https://gsmarena-api-lptq.onrender.com';
 
         try {
-            // Buscar dispositivos pelo nome
             const searchResponse = await axios.get(`${apiBaseUrl}/api/search?name=${encodeURIComponent(nome)}`);
             const { success, devices } = searchResponse.data;
 
@@ -30,11 +29,10 @@ module.exports = {
                 return enviarEmbed(interaction, apiBaseUrl, devices[0]);
             }
 
-            // Criar um menu de seleção com os dispositivos encontrados
             const options = devices.map(device => 
                 new StringSelectMenuOptionBuilder()
                     .setLabel(device.name)
-                    .setValue(device.id) // Usamos o device_id diretamente
+                    .setValue(device.id) 
             );
 
             const selectMenu = new StringSelectMenuBuilder()
@@ -46,21 +44,18 @@ module.exports = {
 
             await interaction.editReply({ content: 'Selecione o dispositivo correto:', components: [row] });
 
-            // Criando um coletor para capturar a resposta do usuário
             const filter = i => i.customId === 'select_device' && i.user.id === interaction.user.id;
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
 
             collector.on('collect', async i => {
-    await i.deferUpdate(); // Evita timeout na resposta do Discord
-
-    const selectedDevice = devices.find(d => d.id === i.values[0]);
-    if (selectedDevice) {
-        await enviarEmbed(i, apiBaseUrl, selectedDevice);
-    } else {
-        await i.editReply({ content: 'Erro ao encontrar o dispositivo.', components: [] });
-    }
-});
-
+                await i.deferUpdate();
+                const selectedDevice = devices.find(d => d.id === i.values[0]);
+                if (selectedDevice) {
+                    await enviarEmbed(i, apiBaseUrl, selectedDevice);
+                } else {
+                    await i.editReply({ content: 'Erro ao encontrar o dispositivo.', components: [] });
+                }
+            });
 
             collector.on('end', collected => {
                 if (collected.size === 0) {
@@ -75,22 +70,31 @@ module.exports = {
     }
 };
 
-// Função para buscar as especificações e enviar o embed
 async function enviarEmbed(interaction, apiBaseUrl, device) {
     try {
-        // Busca as especificações do dispositivo
         const deviceResponse = await axios.get(`${apiBaseUrl}/api/device/${device.id}`);
         const deviceData = deviceResponse.data;
 
-        // Formatar especificações principais
-        const quickSpecs = deviceData.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n');
+        const traducao = {
+            'Display size': 'Tamanho da tela',
+            'Display resolution': 'Resolução da tela',
+            'Camera pixels': 'Câmera principal',
+            'Video pixels': 'Resolução de vídeo',
+            'RAM size': 'Memória RAM',
+            'Chipset': 'Processador',
+            'Battery size': 'Bateria',
+            'Battery type': 'Tipo de bateria'
+        };
 
-        // Criar Embed
+        const quickSpecs = deviceData.quickSpec.map(spec => `**${traducao[spec.name] || spec.name}:** ${spec.value}`).join('\n');
+        const gsmaLink = `https://www.gsmarena.com/${deviceData.slug || device.slug}.php`;
+
         const embed = new EmbedBuilder()
             .setTitle(deviceData.name)
+            .setURL(gsmaLink)
             .setThumbnail(deviceData.img || device.img)
-            .setDescription(quickSpecs || "Nenhuma especificação rápida disponível.")
-            .setColor('#0099ff');
+            .setDescription(quickSpecs || 'Nenhuma especificação disponível.')
+            .setColor('#9900ff');
 
         await interaction.editReply({ content: '', embeds: [embed], components: [] });
 
@@ -99,5 +103,3 @@ async function enviarEmbed(interaction, apiBaseUrl, device) {
         interaction.editReply('Erro ao buscar detalhes do dispositivo.');
     }
 }
-
-
