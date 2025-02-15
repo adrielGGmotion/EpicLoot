@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,11 +18,13 @@ module.exports = {
                 .setRequired(true)),
     
     async execute(interaction) {
+        await interaction.deferReply(); // Evita timeout
+
         const allowedRoles = ['1284871020087476266', '1311633633697861703'];
         
         // Verifica se o usuário tem um dos cargos permitidos
         if (!interaction.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-            return interaction.reply({ content: 'Você não tem permissão para usar este comando.', ephemeral: true });
+            return interaction.editReply({ content: 'Você não tem permissão para usar este comando.', ephemeral: true });
         }
 
         const nome = interaction.options.getString('nome');
@@ -31,20 +33,16 @@ module.exports = {
 
         // Verifica se o anexo é uma imagem
         if (!imagem.contentType || !imagem.contentType.startsWith('image/')) {
-            return interaction.reply({ content: 'O anexo precisa ser uma imagem.', ephemeral: true });
+            return interaction.editReply({ content: 'O anexo precisa ser uma imagem.', ephemeral: true });
         }
-
-        // Obtém a resolução automaticamente
-        const dimensoes = imagem.width && imagem.height ? `${imagem.width}x${imagem.height}` : 'Desconhecida';
 
         // Criação do embed
         const embed = new EmbedBuilder()
             .setTitle(nome)
             .setDescription(`📥 [Baixar Wallpaper](${link})`)
-            .addFields({ name: '📏 Resolução', value: dimensoes, inline: true })
             .setImage(imagem.url)
             .setColor('Random');
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
     }
 };
