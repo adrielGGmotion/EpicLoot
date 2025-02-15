@@ -19,7 +19,7 @@ module.exports = {
 
         try {
             // Buscar dispositivos pelo nome
-            const searchResponse = await axios.get(`${apiBaseUrl}/search?name=${encodeURIComponent(nome)}`);
+            const searchResponse = await axios.get(`${apiBaseUrl}/api/search?name=${encodeURIComponent(nome)}`);
             const { success, devices } = searchResponse.data;
 
             if (!success || !devices || devices.length === 0) {
