@@ -76,13 +76,18 @@ module.exports = {
 // Função para buscar as especificações e enviar o embed
 async function enviarEmbed(interaction, apiBaseUrl, device) {
     try {
+        // Busca as especificações do dispositivo
         const deviceResponse = await axios.get(`${apiBaseUrl}/api/device/${device.id}`);
         const deviceData = deviceResponse.data;
 
+        // Formatar especificações principais
+        const quickSpecs = deviceData.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n');
+
+        // Criar Embed
         const embed = new EmbedBuilder()
             .setTitle(deviceData.name)
             .setThumbnail(deviceData.img || device.img)
-            .setDescription(deviceData.quickSpec.map(spec => `**${spec.name}:** ${spec.value}`).join('\n'))
+            .setDescription(quickSpecs || "Nenhuma especificação rápida disponível.")
             .setColor('#0099ff');
 
         await interaction.editReply({ content: '', embeds: [embed], components: [] });
@@ -92,4 +97,5 @@ async function enviarEmbed(interaction, apiBaseUrl, device) {
         interaction.editReply('Erro ao buscar detalhes do dispositivo.');
     }
 }
+
 
