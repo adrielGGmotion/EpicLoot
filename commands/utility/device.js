@@ -93,6 +93,7 @@ async function enviarEmbed(interaction, apiBaseUrl, device) {
             .setTitle(deviceData.name)
             .setURL(gsmaLink)
             .setThumbnail(deviceData.img || device.img)
+            .setImage('https://media.discordapp.net/attachments/1335584527413809172/1340322169883983892/209_Sem_Titulo_20250215105809.png?ex=67b1efcb&is=67b09e4b&hm=56bcd955aff61fc72fb35ca4420ea1cbc2b30aec341fd3d66b54e84b657df60c&=&width=561&height=80')
             .setDescription(quickSpecs || 'Nenhuma especificação disponível.')
             .setColor('#9900ff');
 
