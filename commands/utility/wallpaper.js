@@ -41,7 +41,7 @@ module.exports = {
             .setTitle(nome)
             .setDescription(`📥 [Baixar Wallpaper](${link})`)
             .setImage(imagem.url)
-            .setColor('9900FF');
+            .setColor('#9900FF');
 
         await interaction.editReply({ embeds: [embed] });
     }
