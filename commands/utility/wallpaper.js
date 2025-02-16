@@ -19,7 +19,7 @@ module.exports = {
     
     async execute(interaction) {
         // IDs dos cargos autorizados
-        const allowedRoles = ['ID_DO_CARGO_1', 'ID_DO_CARGO_2'];
+        const allowedRoles = ['1284871020087476266', '1311633633697861703'];
         
         // Verifica se o usuário tem um dos cargos permitidos
         if (!interaction.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
