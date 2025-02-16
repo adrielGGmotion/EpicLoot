@@ -174,7 +174,15 @@ client.once('ready', async () => {
         console.log(`${colors.yellow}${colors.bright}⚡ SLASH COMMANDS${colors.reset}`);
         console.log('─'.repeat(40));
 
-        if (registeredCommands.length !== commands.length) {
+console.log(`${colors.red}[ LOADER ]${colors.reset} ${colors.green}Forcing Slash Commands Refresh 🛠️${colors.reset}`);
+
+await rest.put(
+    Routes.applicationCommands(client.user.id),
+    { body: commands }
+);
+
+console.log(`${colors.red}[ LOADER ]${colors.reset} ${colors.green}Successfully Reloaded Slash Commands ✅${colors.reset}`);
+
             console.log(`${colors.red}[ LOADER ]${colors.reset} ${colors.green}Loading Slash Commands 🛠️${colors.reset}`);
 
             await rest.put(
