@@ -183,7 +183,6 @@ await rest.put(
 
 console.log(`${colors.red}[ LOADER ]${colors.reset} ${colors.green}Successfully Reloaded Slash Commands ✅${colors.reset}`);
 
-            console.log(`${colors.red}[ LOADER ]${colors.reset} ${colors.green}Loading Slash Commands 🛠️${colors.reset}`);
 
             await rest.put(
                 Routes.applicationCommands(client.user.id),
