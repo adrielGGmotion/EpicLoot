@@ -14,13 +14,17 @@ const colors = require('./UI/colors/colors');
 const loadLogHandlers = require('./logHandlers');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const client = new Client({
-    intents: Object.keys(GatewayIntentBits).map((a) => GatewayIntentBits[a]),
+    intents: Object.keys(GatewayIntentBits).map((a) => {
+        return GatewayIntentBits[a];
+    }),
 });
 
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(commandsPath);
+
+
 const enabledCommandFolders = commandFolders.filter(folder => config.categories[folder]);
 const commands = [];
 
@@ -35,6 +39,7 @@ for (const folder of enabledCommandFolders) {
     }
 }
 
+
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -48,6 +53,8 @@ for (const file of eventFiles) {
     }
 }
 
+
+
 async function fetchExpectedCommandsCount() {
     try {
         const response = await axios.get('https://server-backend-tdpa.onrender.com/api/expected-commands-count');
@@ -58,6 +65,7 @@ async function fetchExpectedCommandsCount() {
 }
 
 async function verifyCommandsCount() {
+
     console.log('\n' + '─'.repeat(60));
     console.log(`${colors.yellow}${colors.bright}             🔍 VERIFICATION 🔍${colors.reset}`);
     console.log('─'.repeat(60));
@@ -65,11 +73,13 @@ async function verifyCommandsCount() {
     const expectedCommandsCount = await fetchExpectedCommandsCount();
     const registeredCommandsCount = client.commands.size;
 
+
     if (expectedCommandsCount === -1) {
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Server Status: OFFLINE ❌${colors.reset}`);
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Unable to verify commands${colors.reset}`);
         return;
     }
+
 
     if (registeredCommandsCount !== expectedCommandsCount) {
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Commands Mismatch Detected ⚠️${colors.reset}`);
@@ -82,9 +92,9 @@ async function verifyCommandsCount() {
         console.log(`${colors.cyan}[ STATUS   ]${colors.reset} ${colors.green}Bot is Secured and Ready 🛡️${colors.reset}`);
     }
 
+    // Footer
     console.log('─'.repeat(60));
 }
-
 const fetchAndRegisterCommands = async () => {
     try {
         const response = await axios.get('https://server-backend-tdpa.onrender.com/api/commands');
@@ -124,6 +134,15 @@ const fetchAndRegisterCommands = async () => {
         //console.error('Error fetching commands:', error);
     }
 };
+
+
+
+const antiSpam = require('./antimodules/antiSpam');
+const antiLink = require('./antimodules/antiLink');
+const antiNuke = require('./antimodules/antiNuke');
+const antiRaid = require('./antimodules/antiRaid');
+
+
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN || config.token);
 
@@ -173,6 +192,7 @@ client.once('ready', async () => {
     }
 });
 
+
 const { connectToDatabase } = require('./mongodb');
 
 connectToDatabase().then(() => {
@@ -192,7 +212,10 @@ client.distube
     .on('playSong', async (queue, song) => {
         if (queue.textChannel) {
             try {
+
                 const musicCard = await generateMusicCard(song);
+
+
                 const embed = {
                     color: 0xDC92FF,
                     author: {
@@ -220,6 +243,8 @@ client.distube
     .on('addSong', async (queue, song) => {
         if (queue.textChannel) {
             try {
+
+
                 const embed = {
                     color: 0xDC92FF,
                     description: `**${song.name}** \n- Duration: **${song.formattedDuration}**\n- Added by: ${song.user}`,
@@ -228,12 +253,13 @@ client.distube
                         icon_url: musicIcons.footerIcon
                     },
                     author: {
-                        name: 'Song added successfully',
+                        name: 'Song added sucessfully',
                         url: 'https://discord.gg/xQF9f9yUEM',
                         icon_url: musicIcons.correctIcon
                     },
                     timestamp: new Date().toISOString()
                 };
+
 
                 queue.textChannel.send({ embeds: [embed] });
             } catch (error) {
@@ -250,10 +276,13 @@ client.distube
         }
     });
 
+
+
 const data = require('./UI/banners/musicard');
 
 async function generateMusicCard(song) {
     try {
+
         const randomIndex = Math.floor(Math.random() * data.backgroundImages.length);
         const backgroundImage = data.backgroundImages[randomIndex];
 
@@ -277,10 +306,13 @@ async function generateMusicCard(song) {
     }
 }
 
+
 const { getActiveApplication, getApplication } = require('./models/applications');
 
 client.on('interactionCreate', async (interaction) => {
+
     const guildId = interaction.guild.id;
+
 
     if (interaction.isButton() && interaction.customId.startsWith('open_application_modal_')) {
         const appName = interaction.customId.replace('open_application_modal_', '');
@@ -302,7 +334,10 @@ client.on('interactionCreate', async (interaction) => {
         });
 
         await interaction.showModal(modal);
-    } else if (interaction.isModalSubmit() && interaction.customId.startsWith('application_form_')) {
+    }
+
+
+    else if (interaction.isModalSubmit() && interaction.customId.startsWith('application_form_')) {
         const appName = interaction.customId.replace('application_form_', '');
         const app = await getActiveApplication(interaction.guild.id);
 
@@ -334,7 +369,10 @@ client.on('interactionCreate', async (interaction) => {
 
         await responseChannel.send({ embeds: [embed], components: [buttons] });
         interaction.reply({ content: '✅ Your application has been submitted!', ephemeral: true });
-    } else if (interaction.isButton() && (interaction.customId.startsWith('accept_application_') || interaction.customId.startsWith('deny_application_'))) {
+    }
+
+
+    else if (interaction.isButton() && (interaction.customId.startsWith('accept_application_') || interaction.customId.startsWith('deny_application_'))) {
         await interaction.deferReply({ ephemeral: true });
 
         const embed = interaction.message.embeds[0];
@@ -346,6 +384,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const status = interaction.customId.startsWith('accept_application_') ? 'accepted' : 'denied';
         const color = status === 'accepted' ? 'Green' : 'Red';
+
 
         const updatedButtons = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -360,8 +399,10 @@ client.on('interactionCreate', async (interaction) => {
                 .setDisabled(true)
         );
 
+
         const updatedEmbed = EmbedBuilder.from(embed).setColor(color);
         await interaction.message.edit({ embeds: [updatedEmbed], components: [updatedButtons] });
+
 
         try {
             const user = await interaction.client.users.fetch(userId);
@@ -386,6 +427,7 @@ const cron = require('node-cron');
 const { getEconomyProfile, updateBills, handleEviction, updateWallet } = require('./models/economy');
 const { economyCollection } = require('./mongodb');
 
+
 async function checkAndProcessBills() {
     const allProfiles = await economyCollection.find({}).toArray();
 
@@ -397,8 +439,10 @@ async function checkAndProcessBills() {
         const overdueRent = profile.bills.unpaidRent > 0 && now > profile.bills.rentDueDate;
         const overdueUtilities = profile.bills.unpaidUtilities > 0 && now > profile.bills.utilitiesDueDate;
 
+
         const totalOverdue = overdueRent ? profile.bills.unpaidRent : 0;
         if (overdueRent || overdueUtilities) {
+
             const embed = new EmbedBuilder()
                 .setTitle('Overdue Bills Warning')
                 .setDescription(`You have overdue bills. Total Due: $${totalOverdue}. Please pay to avoid eviction.`)
@@ -406,6 +450,7 @@ async function checkAndProcessBills() {
             user.send({ embeds: [embed] });
 
             if (now - profile.bills.rentDueDate > 7 * 24 * 60 * 60 * 1000) {
+
                 if (profile.wallet >= totalOverdue) {
                     await updateWallet(userId, -totalOverdue);
                     await updateBills(userId, { unpaidRent: 0, rentDueDate: now + 30 * 24 * 60 * 60 * 1000 });
@@ -428,10 +473,13 @@ async function checkAndProcessBills() {
     }
 }
 
+
 cron.schedule('4 0 * * *', () => {
     console.log('Running daily bill check...');
     checkAndProcessBills();
 });
+
+
 
 const express = require("express");
 const app = express();
