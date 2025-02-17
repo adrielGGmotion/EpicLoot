@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
 const axios = require('axios');
 
+const API_BASE_URL = 'https://gsmarena2api.onrender.com/gsm';
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('device')
@@ -12,21 +14,19 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        await interaction.deferReply(); // Evita timeout
-
+        await interaction.deferReply();
         const nome = interaction.options.getString('nome');
-        const apiBaseUrl = 'https://gsmarena-api-lptq.onrender.com';
 
         try {
-            const searchResponse = await axios.get(`${apiBaseUrl}/api/search?name=${encodeURIComponent(nome)}`);
-            const { success, devices } = searchResponse.data;
+            const searchResponse = await axios.get(`${API_BASE_URL}/search?q=${encodeURIComponent(nome)}`);
+            const devices = searchResponse.data;
 
-            if (!success || !devices || devices.length === 0) {
+            if (!devices || devices.length === 0) {
                 return interaction.editReply('Nenhum dispositivo encontrado.');
             }
 
             if (devices.length === 1) {
-                return enviarEmbed(interaction, apiBaseUrl, devices[0]);
+                return enviarEmbed(interaction, devices[0]);
             }
 
             const options = devices.map(device => 
@@ -41,7 +41,6 @@ module.exports = {
                 .addOptions(options);
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
-
             await interaction.editReply({ content: 'Selecione o dispositivo correto:', components: [row] });
 
             const filter = i => i.customId === 'select_device' && i.user.id === interaction.user.id;
@@ -51,7 +50,7 @@ module.exports = {
                 await i.deferUpdate();
                 const selectedDevice = devices.find(d => d.id === i.values[0]);
                 if (selectedDevice) {
-                    await enviarEmbed(i, apiBaseUrl, selectedDevice);
+                    await enviarEmbed(i, selectedDevice);
                 } else {
                     await i.editReply({ content: 'Erro ao encontrar o dispositivo.', components: [] });
                 }
@@ -62,7 +61,6 @@ module.exports = {
                     interaction.editReply({ content: 'Tempo esgotado! Nenhum dispositivo selecionado.', components: [] });
                 }
             });
-
         } catch (error) {
             console.error(error);
             interaction.editReply('Erro ao buscar informações. Tente novamente mais tarde.');
@@ -70,35 +68,25 @@ module.exports = {
     }
 };
 
-async function enviarEmbed(interaction, apiBaseUrl, device) {
+async function enviarEmbed(interaction, device) {
     try {
-        const deviceResponse = await axios.get(`${apiBaseUrl}/api/device/${device.id}`);
+        const [deviceResponse, imagesResponse] = await Promise.all([
+            axios.get(`${API_BASE_URL}/info/${device.id}`),
+            axios.get(`${API_BASE_URL}/images/${device.id}`)
+        ]);
+
         const deviceData = deviceResponse.data;
-
-        const traducao = {
-            'Display size': 'Tamanho da tela',
-            'Display resolution': 'Resolução da tela',
-            'Camera pixels': 'Câmera principal',
-            'Video pixels': 'Resolução de vídeo',
-            'RAM size': 'Memória RAM',
-            'Chipset': 'Processador',
-            'Battery size': 'Bateria',
-            'Battery type': 'Tipo de bateria'
-        };
-
-        const quickSpecs = deviceData.quickSpec.map(spec => `**${traducao[spec.name] || spec.name}:** ${spec.value}`).join('\n');
-        const gsmaLink = `https://www.gsmarena.com/${deviceData.slug || device.slug}.php`;
+        const images = imagesResponse.data.images;
 
         const embed = new EmbedBuilder()
             .setTitle(deviceData.name)
-            .setURL(gsmaLink)
-            .setThumbnail(deviceData.img || device.img)
-            .setImage('https://media.discordapp.net/attachments/1335584527413809172/1340322169883983892/209_Sem_Titulo_20250215105809.png?ex=67b1efcb&is=67b09e4b&hm=56bcd955aff61fc72fb35ca4420ea1cbc2b30aec341fd3d66b54e84b657df60c&=&width=561&height=80')
-            .setDescription(quickSpecs || 'Nenhuma especificação disponível.')
+            .setURL(`https://www.gsmarena.com/${device.id}`)
+            .setThumbnail(device.image)
+            .setImage(images.length > 0 ? images[0] : device.image)
+            .setDescription(`**Tela:** ${deviceData.display?.size || 'N/A'}\n**Processador:** ${deviceData.chipset || 'N/A'}\n**Câmera:** ${deviceData.main_camera?.features || 'N/A'}\n**Bateria:** ${deviceData.battery?.type || 'N/A'}`)
             .setColor('#9900ff');
 
         await interaction.editReply({ content: '', embeds: [embed], components: [] });
-
     } catch (error) {
         console.error(error);
         interaction.editReply('Erro ao buscar detalhes do dispositivo.');
