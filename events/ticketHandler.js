@@ -27,7 +27,7 @@ async function loadConfig() {
             return acc;
         }, {});
     } catch (err) {
-        console.error('Error loading config from MongoDB:', err);
+        console.error('Erro ao carregar configuração do MongoDB:', err);
     }
 }
 
@@ -39,7 +39,7 @@ module.exports = (client) => {
             await loadConfig();
             monitorConfigChanges(client);
         } catch (error) {
-            console.error('Error during client ready event:', error);
+            console.error('Erro durante o evento de cliente pronto:', error);
         }
     });
 
@@ -51,7 +51,7 @@ module.exports = (client) => {
                 handleCloseButton(interaction, client);
             }
         } catch (error) {
-            console.error('Error handling interaction:', error);
+            console.error('Erro ao lidar com a interação:', error);
         }
     });
 };
@@ -81,28 +81,28 @@ async function monitorConfigChanges(client) {
 
                         const embed = new EmbedBuilder()
                             .setAuthor({
-                                name: "Welcome to Ticket Support",
+                                name: "Bem-vindo ao Suporte de Tickets",
                                 iconURL: ticketIcons.mainIcon,
                                 url: "https://dsc.gg/nextech"
                             })
                             .setDescription(
-                                '- Please click below menu to create a new ticket.\n\n' +
-                                '**Ticket Guidelines:**\n' +
-                                '- Empty tickets are not permitted.\n' +
-                                '- Please be patient while waiting for a response from our support team.'
+                                '- Por favor, clique no menu abaixo para criar um novo ticket.\n\n' +
+                                '**Diretrizes do Ticket:**\n' +
+                                '- Tickets vazios não são permitidos.\n' +
+                                '- Por favor, seja paciente enquanto espera por uma resposta da nossa equipe de suporte.'
                             )
-                            .setFooter({ text: 'We are here to Help!', iconURL: ticketIcons.modIcon })
+                            .setFooter({ text: 'Estamos aqui para ajudar!', iconURL: ticketIcons.modIcon })
                             .setColor('#00FF00')
                             .setTimestamp();
 
                         const menu = new StringSelectMenuBuilder()
                             .setCustomId('select_ticket_type')
-                            .setPlaceholder('Choose ticket type')
+                            .setPlaceholder('Escolha o tipo de ticket')
                             .addOptions([
-                                { label: '🆘 Support', value: 'support' },
-                                { label: '📂 Suggestion', value: 'suggestion' },
+                                { label: '🆘 Suporte', value: 'support' },
+                                { label: '📂 Sugestão', value: 'suggestion' },
                                 { label: '💜 Feedback', value: 'feedback' },
-                                { label: '⚠️ Report', value: 'report' }
+                                { label: '⚠️ Reportar', value: 'report' }
                             ]);
 
                         const row = new ActionRowBuilder().addComponents(menu);
@@ -113,7 +113,7 @@ async function monitorConfigChanges(client) {
                                 components: [row]
                             });
                         } catch (sendError) {
-                            console.error("Error sending ticket menu message:", sendError);
+                            console.error("Erro ao enviar mensagem do menu de tickets:", sendError);
                         }
 
                         previousConfig = JSON.parse(JSON.stringify(config));
@@ -121,7 +121,7 @@ async function monitorConfigChanges(client) {
                 }
             }
         } catch (error) {
-            console.error("Error in monitorConfigChanges:", error);
+            console.error("Erro em monitorConfigChanges:", error);
         }
     }, 5000);
 }
@@ -130,7 +130,7 @@ async function handleSelectMenu(interaction, client) {
     try {
         await interaction.deferReply({ flags: 64 });
     } catch (error) {
-        console.error("Error deferring reply:", error);
+        console.error("Erro ao adiar resposta:", error);
     }
 
     const { guild, user, values } = interaction;
@@ -151,7 +151,7 @@ async function handleSelectMenu(interaction, client) {
             });
         }
     } catch (error) {
-        console.error("Error checking for existing ticket:", error);
+        console.error("Erro ao verificar ticket existente:", error);
     }
 
     let ticketChannel;
@@ -183,9 +183,9 @@ async function handleSelectMenu(interaction, client) {
             ]
         });
     } catch (error) {
-        console.error("Error creating ticket channel:", error);
+        console.error("Erro ao criar canal de ticket:", error);
         return interaction.followUp({
-            content: "Não conseguir criar o ticket, contate um administrador :(",
+            content: "Não consegui criar o ticket, contate um administrador :(",
             flags: 64
         });
     }
@@ -194,17 +194,17 @@ async function handleSelectMenu(interaction, client) {
     try {
         await ticketsCollection.insertOne({ id: ticketId, channelId: ticketChannel.id, guildId, userId, type: ticketType });
     } catch (error) {
-        console.error("Error inserting ticket into the database:", error);
+        console.error("Erro ao inserir ticket no banco de dados:", error);
     }
 
     const ticketEmbed = new EmbedBuilder()
         .setAuthor({
-            name: "Support Ticket",
+            name: "Ticket de Suporte",
             iconURL: ticketIcons.modIcon,
             url: "https://dsc.gg/nextech"
         })
         .setDescription(
-            `Hello ${user}, Bem-vindo ao seu ticket!\n- Por favor, nos descreva seu problema\n- Você receberá uma resposta em breve.\n- Sinta-se livre para abrir outro ticket se esse for fechado.`
+            `Olá ${user}, Bem-vindo ao seu ticket!\n- Por favor, descreva seu problema\n- Você receberá uma resposta em breve.\n- Sinta-se livre para abrir outro ticket se este for fechado.`
         )
         .setFooter({ text: 'Sua satisfação é nossa prioridade.', iconURL: ticketIcons.heartIcon })
         .setColor('#9900FF')
@@ -224,12 +224,12 @@ async function handleSelectMenu(interaction, client) {
             components: [actionRow]
         });
     } catch (error) {
-        console.error("Error sending message in the ticket channel:", error);
+        console.error("Erro ao enviar mensagem no canal de ticket:", error);
     }
 
     const embed = new EmbedBuilder()
         .setColor(0x0099ff)
-        .setImage('https://media.discordapp.net/attachments/1335584527413809172/1337940563202146324/193_Sem_Titulo_20250208211747.png?ex=67ab4000&is=67a9ee80&hm=5c1b0d32b946bc60b6e00c0f2c3801b0592501d8a662ad0de09d0cd96b4c5d6c&=&width=812&height=397')
+        .setImage('https://media.discordapp.net/attachments/1335584527413809172/1337940563202146324/193_Sem_Titulo_20250208211747.png?ex=67ab4000&is=67a9ee80&hm=5c1b0d32b946bc60b6e00c0f2c3801b0592501d[...]')
         .setAuthor({
             name: "Ticket Criado!",
             iconURL: ticketIcons.correctIcon,
@@ -237,7 +237,7 @@ async function handleSelectMenu(interaction, client) {
         })
         .setDescription(`- Seu ticket de ${ticketType} foi criado.`)
         .addFields(
-            { name: 'Canal de Ticket', value: `${ticketChannel.url}` },
+            { name: 'Canal do Ticket', value: `${ticketChannel.url}` },
             { name: 'Instruções', value: 'Por favor, detalhe seu problema.' }
         )
         .setTimestamp()
@@ -249,16 +249,16 @@ async function handleSelectMenu(interaction, client) {
             embeds: [embed]
         });
     } catch (error) {
-        console.error("Error sending DM to user:", error);
+        console.error("Erro ao enviar DM para o usuário:", error);
     }
 
     try {
         await interaction.followUp({
-            content: 'Ticket created!',
+            content: 'Ticket criado!',
             flags: 64
         });
     } catch (error) {
-        console.error("Error sending follow-up message:", error);
+        console.error("Erro ao enviar mensagem de acompanhamento:", error);
     }
 }
 
@@ -266,7 +266,7 @@ async function handleCloseButton(interaction, client) {
     try {
         await interaction.deferReply({ flags: 64 });
     } catch (error) {
-        console.error("Error deferring reply in close button:", error);
+        console.error("Erro ao adiar resposta no botão de fechar:", error);
     }
 
     const ticketId = interaction.customId.replace('close_ticket_', '');
@@ -277,7 +277,7 @@ async function handleCloseButton(interaction, client) {
     try {
         ticket = await ticketsCollection.findOne({ id: ticketId });
     } catch (error) {
-        console.error("Error finding ticket in the database:", error);
+        console.error("Erro ao encontrar ticket no banco de dados:", error);
     }
     if (!ticket) {
         return interaction.followUp({
@@ -287,27 +287,51 @@ async function handleCloseButton(interaction, client) {
     }
 
     const ticketChannel = guild.channels.cache.get(ticket.channelId);
+
     if (ticketChannel) {
-        setTimeout(async () => {
+        if (user.id === ticket.userId || guild.members.cache.get(user.id).roles.cache.has(ticket.adminRoleId)) {
+            const embed = new EmbedBuilder()
+                .setColor(0x0099ff)
+                .setAuthor({
+                    name: "Ticket fechado!",
+                    iconURL: ticketIcons.correctrIcon,
+                    url: "https://dsc.gg/nextech"
+                })
+                .setDescription(`- Seu ticket foi fechado.`)
+                .setTimestamp()
+                .setFooter({ text: 'Obrigado por nos contatar :P', iconURL: ticketIcons.modIcon });
+
             try {
-                await ticketChannel.delete();
+                await ticketChannel.send({
+                    content: 'Este ticket foi fechado.',
+                    embeds: [embed]
+                });
             } catch (error) {
-                console.error("Error deleting ticket channel:", error);
+                console.error("Erro ao enviar mensagem de fechamento no canal do ticket:", error);
             }
-        }, 5000);
+
+            setTimeout(async () => {
+                try {
+                    await ticketChannel.permissionOverwrites.edit(ticket.userId, { ViewChannel: false });
+                    await ticketChannel.permissionOverwrites.edit(ticket.adminRoleId, { ViewChannel: true });
+                } catch (error) {
+                    console.error("Erro ao editar permissões do canal do ticket:", error);
+                }
+            }, 5000);
+        }
     }
 
     try {
-        await ticketsCollection.deleteOne({ id: ticketId });
+        await ticketsCollection.updateOne({ id: ticketId }, { $set: { closed: true } });
     } catch (error) {
-        console.error("Error deleting ticket from the database:", error);
+        console.error("Erro ao atualizar status do ticket no banco de dados:", error);
     }
 
     let ticketUser;
     try {
         ticketUser = await client.users.fetch(ticket.userId);
     } catch (error) {
-        console.error("Error fetching ticket user:", error);
+        console.error("Erro ao buscar usuário do ticket:", error);
     }
     if (ticketUser) {
         const embed = new EmbedBuilder()
@@ -327,7 +351,7 @@ async function handleCloseButton(interaction, client) {
                 embeds: [embed]
             });
         } catch (error) {
-            console.error("Erro ao enviar dms ao usuário:", error);
+            console.error("Erro ao enviar DMs ao usuário:", error);
         }
     }
 
@@ -337,6 +361,6 @@ async function handleCloseButton(interaction, client) {
             flags: 64
         });
     } catch (error) {
-        console.error("Error sending follow-up for ticket closure:", error);
+        console.error("Erro ao enviar mensagem de acompanhamento para fechamento do ticket:", error);
     }
-}
+                    }
