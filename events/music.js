@@ -5,6 +5,7 @@ const path = require('path');
 const musicIcons = require('../UI/icons/musicicons');
 const { Riffy } = require('riffy');
 const { autoplayCollection } = require('../mongodb');
+
 module.exports = (client) => {
     if (config.excessCommands.lavalink) {
         const nodes = [
@@ -35,7 +36,12 @@ module.exports = (client) => {
 
         client.riffy.on('trackStart', async (player, track) => {
             const channel = client.channels.cache.get(player.textChannel);
-            
+
+            // Update bot status to "Listening (Current Track)"
+            client.user.setPresence({
+                activities: [{ name: `🎶 ${track.info.title}`, type: 'LISTENING' }],
+                status: 'online',
+            });
 
             function formatTime(ms) {
                 if (!ms || ms === 0) return "0:00";
@@ -138,6 +144,12 @@ module.exports = (client) => {
                     console.error("Failed to delete finished song message:", err);
                 }
             }
+
+            // Update bot status back to default
+            client.user.setPresence({
+                activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
+                status: 'online',
+            });
         });
 
         client.riffy.on("queueEnd", async (player) => {
