@@ -12,31 +12,29 @@ module.exports = {
             { name: 'NextTech', type: ActivityType.Listening },
         ];
 
-     
         const statuses = ['online'];
 
-     
         let currentActivityIndex = 0;
         let currentStatusIndex = 0;
 
- 
         function setActivityAndStatus() {
-        
-            const activity = activities[currentActivityIndex];
-            const status = statuses[currentStatusIndex];
+            // Check if the bot is currently playing music
+            const isPlayingMusic = client.riffy.players.size > 0 && Array.from(client.riffy.players.values()).some(player => player.playing);
 
-          
-            client.user.setPresence({
-                activities: [activity],
-                status: status,
-            });
+            if (!isPlayingMusic) {
+                const activity = activities[currentActivityIndex];
+                const status = statuses[currentStatusIndex];
 
-            
-            currentActivityIndex = (currentActivityIndex + 1) % activities.length;
-            currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
+                client.user.setPresence({
+                    activities: [activity],
+                    status: status,
+                });
+
+                currentActivityIndex = (currentActivityIndex + 1) % activities.length;
+                currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
+            }
         }
 
-        
         setTimeout(() => {
             setActivityAndStatus();
             console.log('\n' + '─'.repeat(40));
