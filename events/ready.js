@@ -19,7 +19,9 @@ module.exports = {
 
         function setActivityAndStatus() {
             // Check if the bot is currently playing music
-            if (!client.isPlayingMusic) {
+            const isPlayingMusic = client.riffy.players.size > 0 && Array.from(client.riffy.players.values()).some(player => player.playing);
+
+            if (!isPlayingMusic) {
                 const activity = activities[currentActivityIndex];
                 const status = statuses[currentStatusIndex];
 
