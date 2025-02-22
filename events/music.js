@@ -1,4 +1,4 @@
-const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ActivityType } = require('discord.js');
 const config = require('../config.json');
 const { dynamicCard } = require("../UI/dynamicCard");
 const path = require('path');
@@ -37,12 +37,11 @@ module.exports = (client) => {
         client.riffy.on('trackStart', async (player, track) => {
             const channel = client.channels.cache.get(player.textChannel);
 
-            // Update bot status to "Listening (Current Track)"
+            // Update bot status to "Listening to (Track Name)"
             client.user.setPresence({
-                activities: [{ name: `🎶 ${track.info.title}`, type: 'LISTENING' }],
+                activities: [{ name: `Listening to ${track.info.title}`, type: ActivityType.Listening }],
                 status: 'online',
             });
-            client.isPlayingMusic = true; // Flag to indicate music is playing
 
             function formatTime(ms) {
                 if (!ms || ms === 0) return "0:00";
@@ -70,7 +69,7 @@ module.exports = (client) => {
                         console.warn("Previous message not found (likely deleted), skipping edit.");
                     }
                 }
-        
+
                 // Generate the song card image.
                 const cardImage = await dynamicCard({
                     thumbnailURL: track.info.thumbnail,
@@ -80,17 +79,17 @@ module.exports = (client) => {
                     fontPath: path.join(__dirname, "../UI", "fonts", "AfacadFlux-Regular.ttf"),
                     backgroundColor: "#FF00FF",
                 });
-        
+
                 const attachment = new AttachmentBuilder(cardImage, { name: 'songcard.png' });
-        
+
                 const description = `- Título: ${track.info.title} \n`+
-               ` - Artista: ${track.info.author} \n`+
-               ` - Duração: ${formatTime(track.info.length)} (\`${track.info.length}ms\`) \n`+
-               ` - Stream: ${track.info.stream ? "Sim" : "Não"} \n`+
-               ` - Pesquisável: ${track.info.seekable ? "Sim" : "Não"} \n`+
-               ` - URI: [Link](${track.info.uri}) \n`+
-               ` - Fonte: ${track.info.sourceName} \n`+ 
-               ` - Pedido por: ${track.requester ? `<@${track.requester.id}>` : "Unknown"}`; 
+                ` - Artista: ${track.info.author} \n`+
+                ` - Duração: ${formatTime(track.info.length)} (\`${track.info.length}ms\`) \n`+
+                ` - Stream: ${track.info.stream ? "Sim" : "Não"} \n`+
+                ` - Pesquisável: ${track.info.seekable ? "Sim" : "Não"} \n`+
+                ` - URI: [Link](${track.info.uri}) \n`+
+                ` - Fonte: ${track.info.sourceName} \n`+ 
+                ` - Pedido por: ${track.requester ? `<@${track.requester.id}>` : "Unknown"}`; 
                 
                 const embed = new EmbedBuilder()
                     .setAuthor({ name: "Tocando agora...", iconURL: musicIcons.playerIcon, url: "https://dsc.gg/nextech" })
@@ -98,7 +97,7 @@ module.exports = (client) => {
                     .setImage('attachment://songcard.png')
                     .setFooter({ text: 'Distube Player', iconURL: musicIcons.footerIcon })
                     .setColor('#9900ff');
-        
+
                 // Conditionally create buttons only if track.requester is defined.
                 let components = [];
                 if (track.requester && track.requester.id) {
@@ -109,7 +108,7 @@ module.exports = (client) => {
                         new ButtonBuilder().setCustomId(`resume_${track.requester.id}`).setEmoji('▶️').setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder().setCustomId(`skip_${track.requester.id}`).setEmoji('⏭️').setStyle(ButtonStyle.Secondary)
                     );
-        
+
                     const buttonsRow2 = new ActionRowBuilder().addComponents(
                         new ButtonBuilder().setCustomId(`stop_${track.requester.id}`).setEmoji('⏹️').setStyle(ButtonStyle.Danger),
                         new ButtonBuilder().setCustomId(`clear_queue_${track.requester.id}`).setEmoji('🗑️').setStyle(ButtonStyle.Secondary),
@@ -117,23 +116,22 @@ module.exports = (client) => {
                         new ButtonBuilder().setCustomId(`shuffle_${track.requester.id}`).setEmoji('🔀').setStyle(ButtonStyle.Secondary),
                         new ButtonBuilder().setCustomId(`loop_${track.requester.id}`).setEmoji('🔁').setStyle(ButtonStyle.Secondary)
                     );
-        
+
                     components = [buttonsRow, buttonsRow2];
                 }
                 // If track.requester is undefined (for autoplay songs), no buttons are added.
-        
+
                 const message = await channel.send({
                     embeds: [embed],
                     files: [attachment],
                     components: components
                 });
-        
+
                 player.currentMessageId = message.id;
             } catch (error) {
                 console.error('Error creating or sending song card:', error);
             }
         });
-        
 
         client.riffy.on('trackEnd', async (player, track) => {
             const channel = client.channels.cache.get(player.textChannel);
@@ -150,10 +148,9 @@ module.exports = (client) => {
             if (!player.queue || player.queue.length === 0) {
                 // Update bot status back to default
                 client.user.setPresence({
-                    activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
+                    activities: [{ name: 'YouTube Music', type: ActivityType.Watching }],
                     status: 'online',
                 });
-                client.isPlayingMusic = false; // Reset the flag
             }
         });
 
@@ -186,10 +183,9 @@ module.exports = (client) => {
 
             // Update bot status back to default
             client.user.setPresence({
-                activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
+                activities: [{ name: 'YouTube Music', type: ActivityType.Watching }],
                 status: 'online',
             });
-            client.isPlayingMusic = false; // Reset the flag
         });
 
         client.on('interactionCreate', async (interaction) => {
@@ -301,7 +297,6 @@ module.exports = (client) => {
                 await interaction.editReply('❌ Algo deu errado.');
             }
         });
-        
 
         client.on('raw', d => client.riffy.updateVoiceState(d));
         client.once('ready', () => {
