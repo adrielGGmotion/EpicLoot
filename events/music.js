@@ -42,6 +42,7 @@ module.exports = (client) => {
                 activities: [{ name: `🎶 ${track.info.title}`, type: 'LISTENING' }],
                 status: 'online',
             });
+            client.isPlayingMusic = true; // Flag to indicate music is playing
 
             function formatTime(ms) {
                 if (!ms || ms === 0) return "0:00";
@@ -145,11 +146,15 @@ module.exports = (client) => {
                 }
             }
 
-            // Update bot status back to default
-            client.user.setPresence({
-                activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
-                status: 'online',
-            });
+            // Check if there are more tracks in the queue
+            if (!player.queue || player.queue.length === 0) {
+                // Update bot status back to default
+                client.user.setPresence({
+                    activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
+                    status: 'online',
+                });
+                client.isPlayingMusic = false; // Reset the flag
+            }
         });
 
         client.riffy.on("queueEnd", async (player) => {
@@ -177,7 +182,14 @@ module.exports = (client) => {
                         //console.error("Error deleting final embed message:", err);
                     }
                 }, 2000); 
-            }            
+            }
+
+            // Update bot status back to default
+            client.user.setPresence({
+                activities: [{ name: 'YouTube Music', type: 'WATCHING' }],
+                status: 'online',
+            });
+            client.isPlayingMusic = false; // Reset the flag
         });
 
         client.on('interactionCreate', async (interaction) => {
@@ -290,7 +302,6 @@ module.exports = (client) => {
             }
         });
         
-
 
         client.on('raw', d => client.riffy.updateVoiceState(d));
         client.once('ready', () => {
