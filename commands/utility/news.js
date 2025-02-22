@@ -15,7 +15,7 @@ async function buscarNoticias(topico) {
                 apiKey: API_KEY,
                 language: 'pt',
                 sortBy: 'publishedAt',
-                pageSize: 3, // Limita a 3 resultados
+                pageSize: 1, // Limita a X resultados
             },
         });
         return response.data.articles;
@@ -64,20 +64,21 @@ module.exports = {
                 return;
             }
 
-            const embeds = noticias.map(noticia => 
-                new EmbedBuilder()
-                    .setColor('#8a22d4')
-                    .setTitle(noticia.title)
-                    .setURL(noticia.url)
-                    .setDescription(noticia.description || 'Sem descrição disponível.')
-                    .setThumbnail(noticia.urlToImage || 'https://via.placeholder.com/300')
-                    .addFields(
-                        { name: 'Fonte', value: `[${noticia.source.name}](${noticia.url})`, inline: true },
-                        { name: 'Publicado em', value: new Date(noticia.publishedAt).toLocaleString(), inline: true }
-                    )
-                    .setFooter({ text: `Notícias sobre ${topico}` })
-            );
+            const noticia = noticias[0]; // Pega apenas a primeira notícia
+const embed = new EmbedBuilder()
+    .setColor('#8a22d4')
+    .setTitle(noticia.title)
+    .setURL(noticia.url)
+    .setDescription(noticia.description || 'Sem descrição disponível.')
+    .setThumbnail(noticia.urlToImage || 'https://via.placeholder.com/300')
+    .addFields(
+        { name: 'Fonte', value: `[${noticia.source.name}](${noticia.url})`, inline: true },
+        { name: 'Publicado em', value: new Date(noticia.publishedAt).toLocaleString(), inline: true }
+    )
+    .setFooter({ text: `Notícia sobre ${topico}` });
 
+await interaction.reply({ embeds: [embed] });
+            
             await interaction.reply({ embeds });
 
             // Registra o uso do comando no banco
