@@ -39,7 +39,7 @@ module.exports = (client) => {
 
             // Update bot status to "Listening to (Track Name)"
             client.user.setPresence({
-                activities: [{ name: `Listening to ${track.info.title}`, type: ActivityType.Listening }],
+                activities: [{ name: `${track.info.title}`, type: ActivityType.Listening }],
                 status: 'online',
             });
 
