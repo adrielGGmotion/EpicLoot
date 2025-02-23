@@ -77,7 +77,14 @@ async function monitorConfigChanges(client) {
                         if (!guild) continue;
 
                         const ticketChannel = guild.channels.cache.get(settings.ticketChannelId);
-                        if (!ticketChannel) continue;
+                        if (!ticketChannel) {
+                            // Channel doesn't exist, reset the config
+                            await ticketsCollection.updateOne(
+                                { serverId: guildId },
+                                { $unset: { ticketChannelId: "" } }
+                            );
+                            continue;
+                        }
 
                         const embed = new EmbedBuilder()
                             .setAuthor({
@@ -363,4 +370,4 @@ async function handleCloseButton(interaction, client) {
     } catch (error) {
         console.error("Erro ao enviar mensagem de acompanhamento para fechamento do ticket:", error);
     }
-                    }
+}
