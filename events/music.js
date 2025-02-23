@@ -154,21 +154,32 @@ module.exports = (client) => {
                     let currentLine = '';
 
                     function updateLyrics() {
-                        const currentTime = player.position;
-                        for (const line of lyricsLines) {
-                            const match = line.match(/\[(\d+):(\d+).(\d+)\](.*)/);
-                            if (match) {
-                                const minutes = parseInt(match[1], 10);
-                                const seconds = parseInt(match[2], 10);
-                                const milliseconds = parseInt(match[3], 10);
-                                const lineTime = (minutes * 60 + seconds) * 1000 + milliseconds;
-                                if (currentTime >= lineTime) {
-                                    currentLine = match[4];
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
+    const currentTime = player.position;
+    for (const line of lyricsLines) {
+        const match = line.match(/\[(\d+):(\d+).(\d+)\](.*)/);
+        if (match) {
+            const minutes = parseInt(match[1], 10);
+            const seconds = parseInt(match[2], 10);
+            const milliseconds = parseInt(match[3], 10);
+            const lineTime = (minutes * 60 + seconds) * 1000 + milliseconds;
+            if (currentTime >= lineTime) {
+                currentLine = match[4];
+            } else {
+                break;
+            }
+        }
+    }
+    if (currentLine) {
+        if (!embed.fields) {
+            embed.fields = [];
+        }
+        const lyricsField = embed.fields.find(f => f.name === 'Lyrics');
+        if (lyricsField) {
+            lyricsField.value = currentLine;
+            message.edit({ embeds: [embed] });
+        }
+    }
+}
                         if (currentLine) {
                             const lyricsField = embed.fields.find(f => f.name === 'Lyrics');
                             if (lyricsField) {
