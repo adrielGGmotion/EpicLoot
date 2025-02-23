@@ -5,6 +5,9 @@ const path = require('path');
 const musicIcons = require('../UI/icons/musicicons');
 const { Riffy } = require('riffy');
 const { autoplayCollection } = require('../mongodb');
+const axios = require('axios');
+const fs = require('fs');
+const sanitize = require('sanitize-filename');
 
 module.exports = (client) => {
     if (config.excessCommands.lavalink) {
@@ -90,7 +93,7 @@ module.exports = (client) => {
                 ` - URI: [Link](${track.info.uri}) \n`+
                 ` - Fonte: ${track.info.sourceName} \n`+ 
                 ` - Pedido por: ${track.requester ? `<@${track.requester.id}>` : "Unknown"}`; 
-                
+
                 const embed = new EmbedBuilder()
                     .setAuthor({ name: "Tocando agora...", iconURL: musicIcons.playerIcon, url: "https://dsc.gg/nextech" })
                     .setDescription(description)
@@ -128,6 +131,60 @@ module.exports = (client) => {
                 });
 
                 player.currentMessageId = message.id;
+
+                // Fetch lyrics
+                const apiUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(track.info.title)}&artist_name=${encodeURIComponent(track.info.author)}`;
+                const response = await axios.get(apiUrl);
+
+                if (response.data && response.data.syncedLyrics) {
+                    const lyrics = response.data.syncedLyrics;
+                    const tempDir = './temp';
+                    if (!fs.existsSync(tempDir)) {
+                        fs.mkdirSync(tempDir, { recursive: true });
+                    }
+                    const fileName = `${sanitize(track.info.title)} - ${sanitize(track.info.author)}.lrc`;
+                    const filePath = path.join(tempDir, fileName);
+                    fs.writeFileSync(filePath, lyrics, 'utf8');
+
+                    embed.addFields({ name: 'Lyrics', value: 'Fetching lyrics...' });
+                    await message.edit({ embeds: [embed] });
+
+                    // Periodically update lyrics
+                    const lyricsLines = lyrics.split('\n');
+                    let currentLine = '';
+
+                    function updateLyrics() {
+                        const currentTime = player.position;
+                        for (const line of lyricsLines) {
+                            const match = line.match(/\[(\d+):(\d+).(\d+)\](.*)/);
+                            if (match) {
+                                const minutes = parseInt(match[1], 10);
+                                const seconds = parseInt(match[2], 10);
+                                const milliseconds = parseInt(match[3], 10);
+                                const lineTime = (minutes * 60 + seconds) * 1000 + milliseconds;
+                                if (currentTime >= lineTime) {
+                                    currentLine = match[4];
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                        if (currentLine) {
+                            embed.fields.find(f => f.name === 'Lyrics').value = currentLine;
+                            message.edit({ embeds: [embed] });
+                        }
+                    }
+
+                    const lyricsInterval = setInterval(updateLyrics, 1000);
+
+                    // Clear interval when the track ends
+                    client.riffy.on('trackEnd', async (player, track) => {
+                        clearInterval(lyricsInterval);
+                        if (fs.existsSync(filePath)) {
+                            fs.unlinkSync(filePath);
+                        }
+                    });
+                }
             } catch (error) {
                 console.error('Error creating or sending song card:', error);
             }
@@ -173,7 +230,6 @@ module.exports = (client) => {
                         const finalMessage = await channel.messages.fetch(player.currentMessageId);
                         if (finalMessage) {
                             await finalMessage.delete();
-                            //console.log("Final embed message has been deleted after delay.");
                         }
                     } catch (err) {
                         //console.error("Error deleting final embed message:", err);
