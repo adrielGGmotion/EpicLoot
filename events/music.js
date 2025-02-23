@@ -146,7 +146,7 @@ module.exports = (client) => {
                     const filePath = path.join(tempDir, fileName);
                     fs.writeFileSync(filePath, lyrics, 'utf8');
 
-                    embed.addFields({ name: 'Lyrics', value: 'Fetching lyrics...' });
+                    embed.addFields({ name: 'Lyrics', value: lyrics.split('\n')[0] });
                     await message.edit({ embeds: [embed] });
 
                     // Periodically update lyrics
@@ -170,8 +170,11 @@ module.exports = (client) => {
                             }
                         }
                         if (currentLine) {
-                            embed.fields.find(f => f.name === 'Lyrics').value = currentLine;
-                            message.edit({ embeds: [embed] });
+                            const lyricsField = embed.fields.find(f => f.name === 'Lyrics');
+                            if (lyricsField) {
+                                lyricsField.value = currentLine;
+                                message.edit({ embeds: [embed] });
+                            }
                         }
                     }
 
