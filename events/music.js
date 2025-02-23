@@ -136,7 +136,7 @@ module.exports = (client) => {
                 const apiUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(track.info.title)}&artist_name=${encodeURIComponent(track.info.author)}`;
                 const response = await axios.get(apiUrl);
 
-                if (response.data && response.data.syncedLyrics) {
+                if (response.data && response.data.syncedLyrics && response.data.syncedLyrics !== 'Fetching lyrics...') {
                     const lyrics = response.data.syncedLyrics;
                     const tempDir = './temp';
                     if (!fs.existsSync(tempDir)) {
