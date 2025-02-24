@@ -22,8 +22,11 @@ const client = new Client({
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'commands');
-const commandFolders = fs.readdirSync(commandsPath);
 
+// Filter command directories based on updated config
+const commandFolders = fs.readdirSync(commandsPath).filter(folder => {
+    return fs.statSync(path.join(commandsPath, folder)).isDirectory();
+});
 
 const enabledCommandFolders = commandFolders.filter(folder => config.categories[folder]);
 const commands = [];
@@ -39,7 +42,6 @@ for (const folder of enabledCommandFolders) {
     }
 }
 
-
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -52,8 +54,6 @@ for (const file of eventFiles) {
         client.on(event.name, (...args) => event.execute(...args, client));
     }
 }
-
-
 
 async function fetchExpectedCommandsCount() {
     try {
@@ -73,13 +73,11 @@ async function verifyCommandsCount() {
     const expectedCommandsCount = await fetchExpectedCommandsCount();
     const registeredCommandsCount = client.commands.size;
 
-
     if (expectedCommandsCount === -1) {
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Server Status: OFFLINE ❌${colors.reset}`);
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Unable to verify commands${colors.reset}`);
         return;
     }
-
 
     if (registeredCommandsCount !== expectedCommandsCount) {
         console.log(`${colors.yellow}[ WARNING ]${colors.reset} ${colors.red}Commands Mismatch Detected ⚠️${colors.reset}`);
@@ -95,6 +93,7 @@ async function verifyCommandsCount() {
     // Footer
     console.log('─'.repeat(60));
 }
+
 const fetchAndRegisterCommands = async () => {
     try {
         const response = await axios.get('https://server-backend-tdpa.onrender.com/api/commands');
@@ -135,14 +134,10 @@ const fetchAndRegisterCommands = async () => {
     }
 };
 
-
-
 const antiSpam = require('./antimodules/antiSpam');
 const antiLink = require('./antimodules/antiLink');
 const antiNuke = require('./antimodules/antiNuke');
 const antiRaid = require('./antimodules/antiRaid');
-
-
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN || config.token);
 
@@ -194,7 +189,6 @@ client.once('ready', async () => {
     }
 });
 
-
 const { connectToDatabase } = require('./mongodb');
 
 connectToDatabase().then(() => {
@@ -216,7 +210,6 @@ client.distube
             try {
 
                 const musicCard = await generateMusicCard(song);
-
 
                 const embed = {
                     color: 0xDC92FF,
@@ -246,7 +239,6 @@ client.distube
         if (queue.textChannel) {
             try {
 
-
                 const embed = {
                     color: 0xDC92FF,
                     description: `**${song.name}** \n- Duration: **${song.formattedDuration}**\n- Added by: ${song.user}`,
@@ -262,7 +254,6 @@ client.distube
                     timestamp: new Date().toISOString()
                 };
 
-
                 queue.textChannel.send({ embeds: [embed] });
             } catch (error) {
                 console.error('Error sending music card:', error);
@@ -277,8 +268,6 @@ client.distube
             console.error(`Error channel is not a valid TextChannel: ${error.message}`);
         }
     });
-
-
 
 const data = require('./UI/banners/musicard');
 
@@ -308,13 +297,11 @@ async function generateMusicCard(song) {
     }
 }
 
-
 const { getActiveApplication, getApplication } = require('./models/applications');
 
 client.on('interactionCreate', async (interaction) => {
 
     const guildId = interaction.guild.id;
-
 
     if (interaction.isButton() && interaction.customId.startsWith('open_application_modal_')) {
         const appName = interaction.customId.replace('open_application_modal_', '');
@@ -337,7 +324,6 @@ client.on('interactionCreate', async (interaction) => {
 
         await interaction.showModal(modal);
     }
-
 
     else if (interaction.isModalSubmit() && interaction.customId.startsWith('application_form_')) {
         const appName = interaction.customId.replace('application_form_', '');
@@ -373,7 +359,6 @@ client.on('interactionCreate', async (interaction) => {
         interaction.reply({ content: '✅ Your application has been submitted!', ephemeral: true });
     }
 
-
     else if (interaction.isButton() && (interaction.customId.startsWith('accept_application_') || interaction.customId.startsWith('deny_application_'))) {
         await interaction.deferReply({ ephemeral: true });
 
@@ -386,7 +371,6 @@ client.on('interactionCreate', async (interaction) => {
 
         const status = interaction.customId.startsWith('accept_application_') ? 'accepted' : 'denied';
         const color = status === 'accepted' ? 'Green' : 'Red';
-
 
         const updatedButtons = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -401,10 +385,8 @@ client.on('interactionCreate', async (interaction) => {
                 .setDisabled(true)
         );
 
-
         const updatedEmbed = EmbedBuilder.from(embed).setColor(color);
         await interaction.message.edit({ embeds: [updatedEmbed], components: [updatedButtons] });
-
 
         try {
             const user = await interaction.client.users.fetch(userId);
@@ -429,7 +411,6 @@ const cron = require('node-cron');
 const { getEconomyProfile, updateBills, handleEviction, updateWallet } = require('./models/economy');
 const { economyCollection } = require('./mongodb');
 
-
 async function checkAndProcessBills() {
     const allProfiles = await economyCollection.find({}).toArray();
 
@@ -440,7 +421,6 @@ async function checkAndProcessBills() {
         const now = Date.now();
         const overdueRent = profile.bills.unpaidRent > 0 && now > profile.bills.rentDueDate;
         const overdueUtilities = profile.bills.unpaidUtilities > 0 && now > profile.bills.utilitiesDueDate;
-
 
         const totalOverdue = overdueRent ? profile.bills.unpaidRent : 0;
         if (overdueRent || overdueUtilities) {
@@ -455,45 +435,4 @@ async function checkAndProcessBills() {
 
                 if (profile.wallet >= totalOverdue) {
                     await updateWallet(userId, -totalOverdue);
-                    await updateBills(userId, { unpaidRent: 0, rentDueDate: now + 30 * 24 * 60 * 60 * 1000 });
-
-                    const paymentEmbed = new EmbedBuilder()
-                        .setTitle('Bills Paid Automatically')
-                        .setDescription(`We have deducted $${totalOverdue} from your wallet to cover overdue bills.`)
-                        .setColor('#00FF00');
-                    user.send({ embeds: [paymentEmbed] });
-                } else {
-                    await handleEviction(userId);
-                    const evictionEmbed = new EmbedBuilder()
-                        .setTitle('Eviction Notice')
-                        .setDescription('You have been evicted due to unpaid bills.')
-                        .setColor('#FF0000');
-                    user.send({ embeds: [evictionEmbed] });
-                }
-            }
-        }
-    }
-}
-
-
-cron.schedule('4 0 * * *', () => {
-    console.log('Running daily bill check...');
-    checkAndProcessBills();
-});
-
-
-
-const express = require("express");
-const app = express();
-const port = 3000;
-app.get('/', (req, res) => {
-    const imagePath = path.join(__dirname, 'index.html');
-    res.sendFile(imagePath);
-});
-app.listen(port, () => {
-    console.log(`🔗 Listening to GlaceYT : http://localhost:${port}`);
-});
-
-client.login(process.env.TOKEN || config.token);
-
-module.exports = client;
+                    await updateBills(userId, {
