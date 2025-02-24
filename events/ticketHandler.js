@@ -8,8 +8,7 @@ const {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     PermissionsBitField,
-    ChannelType,
-    MessageFlagsBits
+    ChannelType
 } = require('discord.js');
 const ticketIcons = require('../UI/icons/ticketicons');
 
@@ -31,7 +30,63 @@ async function loadConfig() {
     }
 }
 
-setInterval(loadConfig, 5000);
+async function monitorConfigChanges(client) {
+    const changeStream = ticketsCollection.watch();
+    changeStream.on('change', async (change) => {
+        await loadConfig();
+        for (const guildId of Object.keys(config.tickets)) {
+            const settings = config.tickets[guildId];
+            const guild = client.guilds.cache.get(guildId);
+            if (!guild) continue;
+
+            const ticketChannel = guild.channels.cache.get(settings.ticketChannelId);
+            if (!ticketChannel) {
+                await ticketsCollection.updateOne(
+                    { serverId: guildId },
+                    { $unset: { ticketChannelId: "" } }
+                );
+                continue;
+            }
+
+            const embed = new EmbedBuilder()
+                .setAuthor({
+                    name: "Bem-vindo ao Suporte de Tickets",
+                    iconURL: ticketIcons.mainIcon,
+                    url: "https://dsc.gg/nextech"
+                })
+                .setDescription(
+                    '- Por favor, clique no menu abaixo para criar um novo ticket.\n\n' +
+                    '**Diretrizes do Ticket:**\n' +
+                    '- Tickets vazios não são permitidos.\n' +
+                    '- Por favor, seja paciente enquanto espera por uma resposta da nossa equipe de suporte.'
+                )
+                .setFooter({ text: 'Estamos aqui para ajudar!', iconURL: ticketIcons.modIcon })
+                .setColor('#00FF00')
+                .setTimestamp();
+
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId('select_ticket_type')
+                .setPlaceholder('Escolha o tipo de ticket')
+                .addOptions([
+                    { label: '🆘 Suporte', value: 'support' },
+                    { label: '📂 Sugestão', value: 'suggestion' },
+                    { label: '💜 Feedback', value: 'feedback' },
+                    { label: '⚠️ Reportar', value: 'report' }
+                ]);
+
+            const row = new ActionRowBuilder().addComponents(menu);
+
+            try {
+                await ticketChannel.send({
+                    embeds: [embed],
+                    components: [row]
+                });
+            } catch (sendError) {
+                console.error("Erro ao enviar mensagem do menu de tickets:", sendError);
+            }
+        }
+    });
+}
 
 module.exports = (client) => {
     client.on('ready', async () => {
@@ -56,86 +111,9 @@ module.exports = (client) => {
     });
 };
 
-async function monitorConfigChanges(client) {
-    let previousConfig = JSON.parse(JSON.stringify(config));
-
-    setInterval(async () => {
-        try {
-            await loadConfig();
-            if (JSON.stringify(config) !== JSON.stringify(previousConfig)) {
-                for (const guildId of Object.keys(config.tickets)) {
-                    const settings = config.tickets[guildId];
-                    const previousSettings = previousConfig.tickets[guildId];
-
-                    if (
-                        settings &&
-                        settings.status &&
-                        settings.ticketChannelId &&
-                        (!previousSettings || settings.ticketChannelId !== previousSettings.ticketChannelId)
-                    ) {
-                        const guild = client.guilds.cache.get(guildId);
-                        if (!guild) continue;
-
-                        const ticketChannel = guild.channels.cache.get(settings.ticketChannelId);
-                        if (!ticketChannel) {
-                            // Channel doesn't exist, reset the config
-                            await ticketsCollection.updateOne(
-                                { serverId: guildId },
-                                { $unset: { ticketChannelId: "" } }
-                            );
-                            continue;
-                        }
-
-                        const embed = new EmbedBuilder()
-                            .setAuthor({
-                                name: "Bem-vindo ao Suporte de Tickets",
-                                iconURL: ticketIcons.mainIcon,
-                                url: "https://dsc.gg/nextech"
-                            })
-                            .setDescription(
-                                '- Por favor, clique no menu abaixo para criar um novo ticket.\n\n' +
-                                '**Diretrizes do Ticket:**\n' +
-                                '- Tickets vazios não são permitidos.\n' +
-                                '- Por favor, seja paciente enquanto espera por uma resposta da nossa equipe de suporte.'
-                            )
-                            .setFooter({ text: 'Estamos aqui para ajudar!', iconURL: ticketIcons.modIcon })
-                            .setColor('#00FF00')
-                            .setTimestamp();
-
-                        const menu = new StringSelectMenuBuilder()
-                            .setCustomId('select_ticket_type')
-                            .setPlaceholder('Escolha o tipo de ticket')
-                            .addOptions([
-                                { label: '🆘 Suporte', value: 'support' },
-                                { label: '📂 Sugestão', value: 'suggestion' },
-                                { label: '💜 Feedback', value: 'feedback' },
-                                { label: '⚠️ Reportar', value: 'report' }
-                            ]);
-
-                        const row = new ActionRowBuilder().addComponents(menu);
-
-                        try {
-                            await ticketChannel.send({
-                                embeds: [embed],
-                                components: [row]
-                            });
-                        } catch (sendError) {
-                            console.error("Erro ao enviar mensagem do menu de tickets:", sendError);
-                        }
-
-                        previousConfig = JSON.parse(JSON.stringify(config));
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Erro em monitorConfigChanges:", error);
-        }
-    }, 5000);
-}
-
 async function handleSelectMenu(interaction, client) {
     try {
-        await interaction.deferReply({ flags: 64 });
+        await interaction.deferReply({ ephemeral: true });
     } catch (error) {
         console.error("Erro ao adiar resposta:", error);
     }
@@ -154,7 +132,7 @@ async function handleSelectMenu(interaction, client) {
         if (ticketExists) {
             return interaction.followUp({
                 content: 'Você já tem um ticket aberto!!! >:V',
-                flags: 64
+                ephemeral: true
             });
         }
     } catch (error) {
@@ -193,7 +171,7 @@ async function handleSelectMenu(interaction, client) {
         console.error("Erro ao criar canal de ticket:", error);
         return interaction.followUp({
             content: "Não consegui criar o ticket, contate um administrador :(",
-            flags: 64
+            ephemeral: true
         });
     }
 
@@ -236,7 +214,6 @@ async function handleSelectMenu(interaction, client) {
 
     const embed = new EmbedBuilder()
         .setColor(0x0099ff)
-        .setImage('https://media.discordapp.net/attachments/1335584527413809172/1337940563202146324/193_Sem_Titulo_20250208211747.png?ex=67ab4000&is=67a9ee80&hm=5c1b0d32b946bc60b6e00c0f2c3801b0592501d[...]')
         .setAuthor({
             name: "Ticket Criado!",
             iconURL: ticketIcons.correctIcon,
@@ -262,7 +239,7 @@ async function handleSelectMenu(interaction, client) {
     try {
         await interaction.followUp({
             content: 'Ticket criado!',
-            flags: 64
+            ephemeral: true
         });
     } catch (error) {
         console.error("Erro ao enviar mensagem de acompanhamento:", error);
@@ -271,7 +248,7 @@ async function handleSelectMenu(interaction, client) {
 
 async function handleCloseButton(interaction, client) {
     try {
-        await interaction.deferReply({ flags: 64 });
+        await interaction.deferReply({ ephemeral: true });
     } catch (error) {
         console.error("Erro ao adiar resposta no botão de fechar:", error);
     }
@@ -289,7 +266,7 @@ async function handleCloseButton(interaction, client) {
     if (!ticket) {
         return interaction.followUp({
             content: 'Ticket não encontrado, reporte o bug para o Administrador.',
-            flags: 64
+            ephemeral: true
         });
     }
 
@@ -365,7 +342,7 @@ async function handleCloseButton(interaction, client) {
     try {
         await interaction.followUp({
             content: 'Ticket fechado e usuário notificado.',
-            flags: 64
+            ephemeral: true
         });
     } catch (error) {
         console.error("Erro ao enviar mensagem de acompanhamento para fechamento do ticket:", error);
